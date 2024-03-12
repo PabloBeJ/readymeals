@@ -9,6 +9,7 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
+ 
   async function Register() {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
@@ -20,15 +21,14 @@ const LoginScreen = () => {
   };
 
   async function Login() {
-    try {
-   //   await signInWithEmailAndPassword(auth, email, password);
+      try {
+      await signInWithEmailAndPassword(auth, email, password);
       navigation.replace('Home');
     } catch (error) {
       console.error('Login failed:', error.message);
       Alert.alert('Error', error.message);
     }
   };
-
   return (
     <KeyboardAvoidingView style={globalStyles.container} behavior="padding">
       <View style={globalStyles.titleContainer}>

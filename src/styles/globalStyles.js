@@ -3,8 +3,6 @@ import { StyleSheet } from 'react-native';
 //Global images style properties for image icon and for image profile.
 
 const globalStyles = StyleSheet.create({
-  
-
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -23,19 +21,30 @@ const globalStyles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
   },
-  image : {
+  //Differenet sizes for pictures.
+  image: {
     width: 60,
     height: 60,
     borderRadius: 80
   },
-  imageIcon : {
+  imageIcon: {
     width: 30,
     height: 30,
   },
-  imageProfile : {
+  imageProfile: {
     width: 40,
     height: 40,
     borderRadius: 20
+  },
+
+  // Text Input of log in and uplaod picture
+  input: {
+    backgroundColor: 'white',
+    padding: 10,
+    borderRadius: 10,
+    width: '70%',
+    fontSize: 20,
+    marginBottom: 20,
   },
   text: {
     fontSize: 20,
