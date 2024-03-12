@@ -1,38 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Image, Button, TextInput, Text } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { storage } from '../../firebaseConfig';
 import { db } from '../../firebaseConfig'; // Adjust this path as needed
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc } from 'firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
 
 export default function CameraScreen() {
   const [image, setImage] = useState(null);
   const [title, setTitle] = useState(''); // State to hold the title
   const [isReadyToUpload, setIsReadyToUpload] = useState(false); // State to control the UI
+  const navigation = useNavigation()
 
-  const takePhoto = async () => {
+  useEffect(() => {
+    takePhoto(); // Call takePhoto when the component mounts
+  }, []);
+
+  async function  takePhoto () {
     let result = await ImagePicker.launchCameraAsync({
       allowsEditing: false,
       aspect: [4, 3],
       quality: 1,
     });
 
-    if (!result.cancelled && result.assets) {
-      const uri = result.assets[0].uri;
+    if (!result.cancelled && result.uri) {
+      const uri = result.uri;
       setImage(uri); // Set image first
       setIsReadyToUpload(true); // Ready to set title and upload
     } else {
-      console.log('Image picking was cancelled');
+      navigation.replace('Home');
     }
   };
 
-  const uploadImage = async () => {
+async function uploadImage  () {
     if (!image || !title) {
       alert('Please take a photo and set a title.');
       return;
     }
-
     const uri = image;
     const fileName = title.replace(/ /g, "_") + "_" + Date.now(); // A simple way to generate a unique file name based on the title
     try {
@@ -62,12 +67,9 @@ export default function CameraScreen() {
       console.error("Error saving image metadata: ", error);
     }
   };
-
+  
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      {!isReadyToUpload && (
-        <Button title="Take Photo" onPress={takePhoto} />
-      )}
       {isReadyToUpload && (
         <>
           {image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}

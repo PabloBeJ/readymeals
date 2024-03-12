@@ -1,26 +1,15 @@
 import React, { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  StyleSheet,
-  Text,
-  TextInput,
-  Image,
-  TouchableOpacity,
-  View,
-  Alert,
-} from 'react-native';
+import { KeyboardAvoidingView, StyleSheet,  Text, TextInput, Image, TouchableOpacity,  View, Alert,} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { auth } from '../../firebaseConfig';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-
 import globalStyles from '../styles/globalStyles';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
-
-  async function userSignUp() {
+  async function Register() {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       navigation.replace('Home');
@@ -30,9 +19,9 @@ const LoginScreen = () => {
     }
   };
 
-  async function userLogin() {
+  async function Login() {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+   //   await signInWithEmailAndPassword(auth, email, password);
       navigation.replace('Home');
     } catch (error) {
       console.error('Login failed:', error.message);
@@ -42,35 +31,35 @@ const LoginScreen = () => {
 
   return (
     <KeyboardAvoidingView style={globalStyles.container} behavior="padding">
-      <View style={styles.titleContainer}>
+      <View style={globalStyles.titleContainer}>
         <Image
           source={require("../assets/img/LogoReadyMeals.jpg")}
-          style={{ width: 60, height: 60, borderRadius: 80 }}
+          style={globalStyles.image}
         />
-        <Text style={[globalStyles.title, { marginLeft: 20 }]}>Ready Meals</Text>
+        <Text style={[globalStyles.title, { marginLeft: 20}]}>Ready Meals</Text>
       </View>
       <View style={styles.backgroundColor}>
         <View style={styles.inputContainer}>
           <TextInput
-            placeholder="Email"
+            placeholder="Email...."
             value={email}
             onChangeText={text => setEmail(text)}
             style={[styles.input, { marginBottom: 10 }]} // Added marginBottom to separate inputs
           />
           <TextInput
-            placeholder="Password"
+            placeholder="Password...."
             value={password}
             onChangeText={text => setPassword(text)}
             style={[styles.input, { marginBottom: 20 }]} // Added marginBottom to separate inputs
             secureTextEntry
           />
         </View>
-
+        {/** Buttons to login or Register. */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity onPress={userLogin} style={styles.button}>
+          <TouchableOpacity onPress={Login} style={styles.button}>
             <Text style={styles.buttonText}>Login</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={userSignUp} style={[styles.button, styles.buttonOutline]}>
+          <TouchableOpacity onPress={Register} style={[styles.button, styles.buttonOutline]}>
             <Text style={styles.buttonOutlineText}>Register</Text>
           </TouchableOpacity>
         </View>
@@ -80,18 +69,12 @@ const LoginScreen = () => {
 };
 
 export default LoginScreen;
-
 const styles = StyleSheet.create({
-  titleContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-    flexDirection: 'row',
-    top: -70,
-  },
   backgroundColor:{
     backgroundColor: 'black',
     width: '90%',
-    padding: 30,
+    paddingHorizontal: 10,
+    paddingVertical: 30,
     borderRadius: 20,
   },
   inputContainer: {

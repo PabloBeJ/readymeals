@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import globalStyles from '../styles/globalStyles';
 import { useNavigation } from '@react-navigation/native';
 import { Camera } from 'expo-camera';
@@ -7,66 +7,67 @@ import { Camera } from 'expo-camera';
 
 const Footer = () => {
   //Navifate the different pages.
-   const navigation = useNavigation(); 
+  const navigation = useNavigation();
 
 
-  function home(){
+  function home() {
     navigation.replace('Home');
   }
 
-// Ask user for permision to use the camera is so it will take to the cameras if no error,
-  async function uploadImage () {
+  // Ask user for permision to use the camera is so it will take to the cameras if no error,
+  async function uploadImage() {
     const { status } = await Camera.requestCameraPermissionsAsync();
     if (status == 'granted') {
-       navigation.replace('Camera');
+      navigation.replace('Camera');
     }
     else Alert.alert('Access denied');
   };
-  function favourites(){
+  function favourites() {
     navigation.replace('CustomCamera');
   }
-  function profile(){
-
+  function profile() {
+    navigation.replace('Profile');
   }
- 
+
   return (
     <View style={styles.footer}>
-      
-    <TouchableOpacity onPress={home} style={[globalStyles.controlButton, styles.buttonMargin]}>
-      <Text style={[styles.controlButtonText, {fontSize:30}]}>🏠</Text>
-    </TouchableOpacity>
-    <TouchableOpacity onPress={uploadImage} style={globalStyles.controlButton}>
-       <Text style={styles.text}>➕</Text>
-    </TouchableOpacity>
-    <TouchableOpacity onPress={favourites}style={globalStyles.controlButton}>
-      <Text style={[styles.controlButtonText, {fontSize:30}]}>⭐</Text>
-    </TouchableOpacity>
-    <TouchableOpacity onPress={profile} style={globalStyles.controlButton}>
-      <Text style={[styles.controlButtonText, {fontSize:30}]}>👤</Text>
-    </TouchableOpacity>
+
+      <TouchableOpacity onPress={home} style={[globalStyles.controlButton, styles.buttonMargin]}>
+        <Image source={require("../assets/img/icon_img/home-icon.png")} style={globalStyles.imageIcon}
+        />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={uploadImage} style={globalStyles.controlButton}>
+        <Image source={require("../assets/img/icon_img/plus-icon.png")} style={globalStyles.imageIcon}
+        />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={favourites} style={globalStyles.controlButton}>
+        <Image source={require("../assets/img/icon_img/star-icon.png")} style={globalStyles.imageIcon}
+        />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={profile} style={globalStyles.controlButton}>
+      <Image source={require("../assets/img/profilePicture.png")} style={globalStyles.imageProfile}
+        />
+      </TouchableOpacity>
 
     </View>
   );
 }
 
-const styles = StyleSheet.create({ 
-    footer: {
-        position: 'absolute',
-        bottom: 20,
-        left: 10,
-        right: 10,
-        borderRadius: 80,
-        backgroundColor: '#eee',
-        alignItems: 'center',
-        justifyContent: 'space-between', // Changed from 'center' to 'space-between' as it conflicts with the flexDirection below
-        flexDirection: 'row', // Moved up to be after height
-        flex: 1, // Moved up to be before flexDirection
-        padding: 10, 
-        margin:10// Padding to adjust the content inside 
-      },
-      buttonMargin:{
-        
-      },
+const styles = StyleSheet.create({
+  footer: {
+    flex: 1,
+    position: 'absolute',
+    bottom: -10,
+    left: 10,
+    right: 10,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexDirection: 'row', 
+    marginVertical: 10,
+    marginHorizontal:-20,
+    paddingHorizontal: 30,
+  },
   text: {
     fontSize: 30,
     color: '#555',

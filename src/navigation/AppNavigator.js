@@ -6,6 +6,7 @@ import HomeScreen from "../screens/HomeScreen";
 import LoginScreen from "../screens/LoginScreen";
 import CameraScreen from "../screens/CameraScreen";
 import CustomCameraScreen from "../screens/CustomCameraScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 
 const Stack = createNativeStackNavigator();
 const AppNavigator = () => {
@@ -25,6 +26,7 @@ const AppNavigator = () => {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Camera" component={CameraScreen} />
         <Stack.Screen name="CustomCamera" component={CustomCameraScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -45,7 +47,6 @@ const HeaderFont = () => {
     </TouchableOpacity>
   );
 };
-
 export default AppNavigator;
 
 const styles = StyleSheet.create({});

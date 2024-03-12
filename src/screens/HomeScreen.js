@@ -1,32 +1,16 @@
 import { useNavigation } from '@react-navigation/core'
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, FlatList, Image } from 'react-native'
-import { initializeApp } from '@react-native-firebase/app';
-import { auth ,storage} from '../../firebaseConfig';
+import { StyleSheet, Text, View, FlatList, Image } from 'react-native'
+import { auth, storage } from '../../firebaseConfig';
 import Footer from '../components/Footer';
 import globalStyles from '../styles/globalStyles';
-import { ref, uploadBytes, getDownloadURL, listAll } from 'firebase/storage';
+import { ref, getDownloadURL, listAll } from 'firebase/storage';
 const HomeScreen = () => {
-  const navigation = useNavigation()
   const [images, setImages] = useState([]);
 
   useEffect(() => {
     fetchFilesFromStorage();
   }, []);
-  const handleSignOut = () => {
-    auth
-      .signOut()
-      .then(() => {
-        navigation.replace("Login")
-      })
-      .catch(error => alert(error.message))
-  }
-
-
-  const renderImageItem = ({ item }) => (
-    <Image source={{ uri: item }} style={{ width: 200, height: 200, margin: 5 }} />
-  )
-  
 
   const fetchFilesFromStorage = async () => {
     try {
@@ -41,42 +25,50 @@ const HomeScreen = () => {
       console.error('Error fetching files from Firebase Storage:', error);
     }
   }
- 
-  return (
-    <View style={globalStyles.container}>
 
+  return (
+    <View>
+      {/*Scrool View of all the image publish by useers and printed at the center of the screeen */}
       <FlatList
         data={images}
-        renderItem={renderImageItem}
+        renderItem={({ item }) => (
+          <View style={globalStyles.container}>
+            <View style={styles.titleContainer}>
+              <Image
+                source={require("../assets/img/profilePicture.png")}
+                style={globalStyles.image}
+              />
+               <Text style={globalStyles.text}> Pablo_bt </Text>
+            </View>
+            <Image source={{ uri: item }} style={styles.image} />
+            <Text style={globalStyles.text}> Titulo de Comida </Text>
+          </View>
+          
+        )}
         keyExtractor={(item, index) => index.toString()}
-        numColumns={2}
+        numColumns={1}
+        contentContainerStyle={[styles.flatListContentContainer, { paddingBottom: 100 , backgroundColor: '#22252A', }]}
       />
-
-      <Footer />  
+      <Footer />
     </View>
   )
 }
-
-
 export default HomeScreen
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  button: {
-    backgroundColor: '#0782F9',
-    width: '60%',
-    padding: 15,
-    borderRadius: 10,
+  titleContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 40,
+    marginVertical: 10,
+    marginRight: 'auto',
+    position: 'relative',
+    left: 0,
   },
-  buttonText: {
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 16,
+  image: {
+    width: '90%',
+    aspectRatio: 1 / 1,
+    resizeMode: 'cover',
+    marginVertical: 10,
+    borderRadius: 10,
   },
 })
