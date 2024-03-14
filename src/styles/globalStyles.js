@@ -36,16 +36,6 @@ const globalStyles = StyleSheet.create({
     height: 40,
     borderRadius: 20
   },
-
-  // Text Input of log in and uplaod picture
-  input: {
-    backgroundColor: 'white',
-    padding: 10,
-    borderRadius: 10,
-    width: '70%',
-    fontSize: 20,
-    marginBottom: 20,
-  },
   text: {
     fontSize: 20,
     fontWeight: 'bold',

@@ -8,8 +8,6 @@ import { Camera } from 'expo-camera';
 const Footer = () => {
   //Navifate the different pages.
   const navigation = useNavigation();
-
-
   function home() {
     navigation.replace('Home');
   }
@@ -23,7 +21,7 @@ const Footer = () => {
     else Alert.alert('Access denied');
   };
   function favourites() {
-    navigation.replace('CustomCamera');
+    navigation.replace('Favourites');
   }
   function profile() {
     navigation.replace('Profile');

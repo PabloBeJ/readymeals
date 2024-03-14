@@ -1,23 +1,19 @@
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, StyleSheet,  Text, TextInput, Image, TouchableOpacity,  View, Alert,} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { auth } from '../../firebaseConfig';
+import { auth } from '../../../firebaseConfig';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import globalStyles from '../styles/globalStyles';
-
+import globalStyles from '../../styles/globalStyles';
+import { doc, setDoc } from "firebase/firestore"; 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
  
+
+
   async function Register() {
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      navigation.replace('Home');
-    } catch (error) {
-      console.error('Error creating user:', error.message);
-      Alert.alert('Error', error.message);
-    }
+    navigation.replace('Register');
   };
 
   async function Login() {
@@ -33,7 +29,7 @@ const LoginScreen = () => {
     <KeyboardAvoidingView style={globalStyles.container} behavior="padding">
       <View style={globalStyles.titleContainer}>
         <Image
-          source={require("../assets/img/LogoReadyMeals.jpg")}
+          source={require("../../assets/img/LogoReadyMeals.jpg")}
           style={globalStyles.image}
         />
         <Text style={[globalStyles.title, { marginLeft: 20}]}>Ready Meals</Text>

@@ -2,8 +2,8 @@ import { initializeApp } from 'firebase/app';
 import { initializeAuth, getReactNativePersistence } from 'firebase/auth'; // Import initializeAuth
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage'; // Import ReactNativeAsyncStorage
 import { getStorage } from 'firebase/storage'; // Remove unnecessary imports
-import { getFirestore } from 'firebase/firestore'; // Import getFirestore
-// Your web app's Firebase configuration
+import { getFirestore, collection, getDocs } from 'firebase/firestore'; // Import getFirestore
+//Configuration of firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBQBBdZGsjI43h2GoNR49R86QoWHe3wMRg",
   authDomain: "readymeals-97c8e.firebaseapp.com",
@@ -26,11 +26,9 @@ const auth = initializeAuth(app, {
 const storage = getStorage(app);
 
 // Initialize Firestore
-const firestore = getFirestore(app); // Get Firestore insta
+const db = getFirestore(app); 
 
-const imgDB = getStorage(app)
-const txtDB = getFirestore(app)
 
-export {};
+
 // Export authentication, storage, and Firestore libraries
-export { auth, storage, firestore ,imgDB,txtDB }; 
+export { auth, storage, db  }; 

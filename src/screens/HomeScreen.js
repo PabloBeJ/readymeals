@@ -5,6 +5,7 @@ import { auth, storage } from '../../firebaseConfig';
 import Footer from '../components/Footer';
 import globalStyles from '../styles/globalStyles';
 import { ref, getDownloadURL, listAll, getMetadata } from 'firebase/storage';
+
 const HomeScreen = () => {
   const [images, setImages] = useState([]);
   useEffect(() => {
@@ -18,8 +19,7 @@ const HomeScreen = () => {
   
       // Map over each image location to get its download URL, title, and timestamp
       const filePromises = getImages.items.map(async (imageLocation) => {
-        console.log(imageLocation);
-        
+
         // Get the download URL for the image
         const downloadURL = await getDownloadURL(imageLocation);
         
@@ -28,13 +28,10 @@ const HomeScreen = () => {
         
         // Get the metadata for the image to access its creation time
         const metadata = await getMetadata(imageLocation);
-        console.log("metadata " + metadata);
-        
         // Check if metadata.timeCreated is a valid timestamp
         // If valid, convert it to milliseconds
-
         const timestamp = new Date(metadata.timeCreated).getTime() || 0;
-        console.log('Timestamp: ' + timestamp);
+    
 
         // Return an object with download URL, image title, and timestamp
         return { downloadURL, imageTitle, timestamp };

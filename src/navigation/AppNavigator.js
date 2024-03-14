@@ -3,10 +3,12 @@ import React from "react";
 import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import HomeScreen from "../screens/HomeScreen";
-import LoginScreen from "../screens/LoginScreen";
+import LoginScreen from "../screens/registration/LoginScreen";
+import RegisterScreen from "../screens/registration/RegisterScreen";
 import CameraScreen from "../screens/CameraScreen";
 import CustomCameraScreen from "../screens/CustomCameraScreen";
 import ProfileScreen from "../screens/ProfileScreen";
+import FavouritesScreen from "../screens/FavouritesScreen";
 
 const Stack = createNativeStackNavigator();
 const AppNavigator = () => {
@@ -23,8 +25,10 @@ const AppNavigator = () => {
       >
         {/* Each Stack.Screen should be directly inside Stack.Navigator */}
         <Stack.Screen options={{ headerShown: false }} name="Login" component={LoginScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="Register" component={RegisterScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Camera" component={CameraScreen} />
+        <Stack.Screen name="Favourites" component={FavouritesScreen} />
         <Stack.Screen name="CustomCamera" component={CustomCameraScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
       </Stack.Navigator>

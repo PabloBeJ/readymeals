@@ -1,80 +1,95 @@
-import { useNavigation } from '@react-navigation/core'
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, FlatList, Image } from 'react-native'
-import { initializeApp } from '@react-native-firebase/app';
-import { auth ,storage} from '../../firebaseConfig';
-import Footer from '../components/Footer';
-import globalStyles from '../styles/globalStyles';
-import { ref, uploadBytes, getDownloadURL, listAll } from 'firebase/storage';
-const ProfileScreen = () => {
-  const navigation = useNavigation()
-  const [images, setImages] = useState([]);
+import React, { useState } from 'react';
+import { Button, View, Alert, Image, StyleSheet } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { db, storage } from '../../firebaseConfig'; // Adjust the import path as necessary
 
-  useEffect(() => {
-    fetchFilesFromStorage();
-  }, []);
-  const handleSignOut = () => {
-    auth
-      .signOut()
-      .then(() => {
-        navigation.replace("Login")
-      })
-      .catch(error => alert(error.message))
+const uploadImageToStorage = async (uri, path) => {
+  try {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    const ref = storage.ref().child(path);
+    const snapshot = await ref.put(blob);
+    return await snapshot.ref.getDownloadURL();
+  } catch (error) {
+    console.error('Error uploading image: ', error);
+    return null;
   }
+};
 
+const ImagePickerAndUploader = () => {
+  const [imageUri, setImageUri] = useState(null);
 
-  const renderImageItem = ({ item }) => (
-    <Image source={{ uri: item }} style={{ width: 200, height: 200, margin: 5 }} />
-  )
-  
-
-  const fetchFilesFromStorage = async () => {
-    try {
-      const listResult = await listAll(ref(storage, 'images/'));
-      const filePromises = listResult.items.map(async (itemRef) => {
-        const downloadURL = await getDownloadURL(itemRef);
-        return downloadURL;
-      });
-      const imageURLs = await Promise.all(filePromises);
-      setImages(imageURLs);
-    } catch (error) {
-      console.error('Error fetching files from Firebase Storage:', error);
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission denied', 'Sorry, we need camera roll permissions to make this work.');
+      return;
     }
-  }
- 
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.cancelled) {
+      setImageUri(result.uri);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!imageUri) {
+      Alert.alert('No image selected', 'Please select an image before submitting.');
+      return;
+    }
+
+    try {
+      const filename = `${Date.now()}.jpg`;
+      const imageUrl = await uploadImageToStorage(imageUri, `images/${filename}`);
+      
+      if (imageUrl) {
+        // Save imageUrl to your database
+        const docRef = await db.collection('images').add({
+          url: imageUrl,
+          createdAt: new Date(),
+        });
+        console.log('Image uploaded successfully with document ID: ', docRef.id);
+        Alert.alert('Upload Successful', 'Image uploaded successfully!');
+        setImageUri(null); // Clear imageUri after successful upload
+      } else {
+        Alert.alert('Upload Failed', 'Failed to upload image.');
+      }
+    } catch (error) {
+      console.error('Error uploading image: ', error);
+      Alert.alert('Upload Failed', 'An error occurred while uploading the image.');
+    }
+  };
+
   return (
-    <View style={globalStyles.container}>
-
-      <FlatList
-        data={images}
-        renderItem={renderImageItem}
-        keyExtractor={(item, index) => index.toString()}
-        numColumns={2}
-      />
-
-      <Footer />  
+    <View style={styles.container}>
+      {imageUri && (
+        <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+      )}
+      <Button title="Pick an Image" onPress={pickImage} />
+      {imageUri && <Button title="Submit" onPress={handleUpload} />}
     </View>
-  )
-}
-export default ProfileScreen
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  button: {
-    backgroundColor: '#0782F9',
-    width: '60%',
-    padding: 15,
-    borderRadius: 10,
     alignItems: 'center',
-    marginTop: 40,
+    justifyContent: 'center',
+    padding: 20,
   },
-  buttonText: {
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 16,
+  imagePreview: {
+    width: 200,
+    height: 200,
+    borderRadius: 10,
+    marginBottom: 20,
   },
-})
+});
+
+export default ImagePickerAndUploader;
