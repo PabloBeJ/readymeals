@@ -16,7 +16,7 @@ const globalStyles = StyleSheet.create({
     flexDirection: 'row',
   },
   title: {
-    fontSize: 30,
+    fontSize: 40,
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
@@ -40,6 +40,12 @@ const globalStyles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: 'white',
+  },
+  textPlacehover: {
+    fontSize: 20,
+    fontWeight: 'light',
+    color: '#aba8a7',
+    marginBottom: '200px',
   },
   //Buttons for the footer and camera. 
   controlButton: {

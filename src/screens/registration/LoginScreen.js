@@ -9,9 +9,6 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
- 
-
-
   async function Register() {
     navigation.replace('Register');
   };

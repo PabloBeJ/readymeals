@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, StyleSheet, Text, TextInput, Image, TouchableOpacity, View, Alert, } from 'react-native';
+import { KeyboardAvoidingView, StyleSheet, Text, TextInput, Image, TouchableOpacity, View, Alert, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import globalStyles from '../../styles/globalStyles';
 //import { doc, collection, addDoc, setDoc, firestore } from "firebase/firestore";
-import {  collection,  getDocs, doc, setDoc } from 'firebase/firestore';
+import {  collection,  getDocs, doc, setDoc , getDoc } from 'firebase/firestore';
 import { auth, db } from '../../../firebaseConfig';
 import firestore from '@react-native-firebase/firestore';
 const LoginScreen = () => {
@@ -24,46 +24,44 @@ const LoginScreen = () => {
     });
   };
 
-  const handleSignOut = () => {
-    auth
-      .signOut()
-      .then(() => {
-        navigation.replace("Login")
-      })
-      .catch(error => alert(error.message))
-  }
-
-  
-
   const Register = async () => {
-    try {
-      if (!inputpassword || !inputconfirmPassword || inputpassword !== inputconfirmPassword) {
-        Alert.alert('Passwords do not match');
-      }
-      // Create user in Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(auth, inputemail, inputpassword);
-      const userId = userCredential.user.uid;
-      console.log(userId);
-      // Add user details to Firestore
-      const userRef = doc(db, "users", userId); // Correct collection name to "users"
-      await setDoc(userRef, {
-        phone: inputphone,
-        username: inputusername,
-        profilePicture: "default.png"
-      });
 
-      console.log("User registered successfully!");
-      navigation.replace('Home');
-    } catch (error) {
-      console.error('Error creating user:', error.message);
-      Alert.alert('Error', error.message);
-    }
-  };
+    // Check if username is already taken
+/*    const isUsernameTaken = await checkUsernameExists(inputusername);
+    if (isUsernameTaken) {
+      Alert.alert('Username Taken', 'This username is already taken. Please choose another.');
+      return;
+    }console.log('Username Created1' + error.message);*/
+   try {
+  
+     if (!inputpassword || !inputconfirmPassword || inputpassword !== inputconfirmPassword) {
+       Alert.alert('Passwords do not match');
+     }
+     // Create user in Firebase Authentication
+     const userCredential = await createUserWithEmailAndPassword(auth, inputemail, inputpassword);
+
+     const userId = userCredential.user.uid;
+     // Add user details to Firestore
+     const userRef = doc(db, "users", userId); // Correct collection name to "users"
+     await setDoc(userRef, {
+       email: inputemail,
+       phone: inputphone,
+       username: inputusername,
+       profilePicture: "default.png"
+     });
+     Alert.alert('Welcome. User: ' + inputusername+ ' Registered successfully!');
+     navigation.replace('Home');
+   } catch (error) {
+     console.error('Error creating user:', error.message);
+     Alert.alert('Error', error.message);
+   }
+ };
   async function Cancel() {
     navigation.replace('Login');
   };
   return (
-    <KeyboardAvoidingView style={globalStyles.container} behavior="padding">
+    <ScrollView style={{flex: 1,  backgroundColor: '#22252A'}}>
+    <KeyboardAvoidingView style={[globalStyles.container , {paddingBottom: 50}]} behavior="padding">
       <View style={globalStyles.titleContainer}>
         <Image
           source={require("../../assets/img/LogoReadyMeals.jpg")}
@@ -73,9 +71,8 @@ const LoginScreen = () => {
       </View>
       <View style={styles.backgroundColor}>
         <View style={styles.inputContainer}>
-
           <TextInput
-            placeholder="Email adress"
+            placeholder="Email"
             value={inputemail}
             onChangeText={text => setEmail(text)}
             style={styles.input}
@@ -105,7 +102,6 @@ const LoginScreen = () => {
             value={inputphone}
             onChangeText={text => setPhone(text)}
             style={styles.input}
-            secureTextEntry
           />
         </View>
         {/** Buttons to login or Register. */}
@@ -119,6 +115,7 @@ const LoginScreen = () => {
         </View>
       </View>
     </KeyboardAvoidingView>
+    </ScrollView>
   );
 };
 
