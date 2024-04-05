@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, I
 import { doc, updateDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db, storage } from '../../firebaseConfig'; // Assuming you have initialized Firebase app and exported `auth` and `db`
 import { ref, uploadBytes, getDownloadURL, deleteObject, listAll } from 'firebase/storage';
-import { getAuth, updateEmail, EmailAuthProvider, updatePassword, reauthenticateWithCredential, sendEmailVerification } from "firebase/auth";
+import { getAuth, deleteUser, updateEmail, EmailAuthProvider, updatePassword, reauthenticateWithCredential, sendEmailVerification } from "firebase/auth";
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import globalStyles from '../styles/globalStyles';
@@ -18,9 +18,7 @@ const UpdateProfileScreen = () => {
   const [image, setImage] = useState(null);
   const [userId, setUserId] = useState(null); // State to hold userId
 
-
   //Navigation to change scenary when signing out or deleting the account. 
-
   const navigation = useNavigation();
   useEffect(() => {
     // Check if user is logged in
@@ -54,7 +52,7 @@ const UpdateProfileScreen = () => {
             setInputEmail(userData.email); //Prints the email
             if (userData.profilePicture) {
               // Get the download URL of the profile picture
-              const fileRef = ref(storage, `images/${userId}/ProfilePicture`);
+              const fileRef = ref(storage, `images/${userId}/ProfilePicture/`);
               const downloadURL = await getDownloadURL(fileRef);
               setImage(downloadURL);
             }
@@ -78,14 +76,11 @@ const UpdateProfileScreen = () => {
       aspect: [4, 3],
       quality: 1,
     });
-
     console.log(result);
-
     if (!result.canceled) {
       setImage(result.assets[0].uri);
     }
   }
-
   //Confirmation if the user wants to update their account.
   const confirmationUpdate = () => {
     Alert.alert(
@@ -106,7 +101,6 @@ const UpdateProfileScreen = () => {
     );
   };
 
-
   //Confirmation if the user wants to delete their account.
   const confirmationDelete = () => {
     Alert.alert(
@@ -118,9 +112,10 @@ const UpdateProfileScreen = () => {
           style: 'cancel',
         },
         {
-          text: 'Update',
+          text: 'Delete',
           onPress: handleDeleteProfile,
           style: 'destructive',
+          color: 'red',
         },
       ],
       { cancelable: false }
@@ -193,7 +188,7 @@ const UpdateProfileScreen = () => {
         try {
           const response = await fetch(imageUri);
           const blob = await response.blob();
-          const deleteRef = ref(storage, `images/${userId}/ProfilePicture`);
+          const deleteRef = ref(storage, `images/${userId}/ProfilePicture/`);
           const fileRef = ref(storage, `images/${userId}/ProfilePicture`);
           // Delete the previous profile picture. And updates the new one.
           await deleteObject(deleteRef);
@@ -206,7 +201,7 @@ const UpdateProfileScreen = () => {
           //If the file does not exist to delete it creates a new one. 
           const response = await fetch(imageUri);
           const blob = await response.blob();
-          const fileRef = ref(storage, `images/${userId}/ProfilePicture`);
+          const fileRef = ref(storage, `images/${userId}/ProfilePicture/`);
           await uploadBytes(fileRef, blob);
           const downloadURL = await getDownloadURL(fileRef);
           dataToUpdate.profileImage = downloadURL;
@@ -242,7 +237,7 @@ const UpdateProfileScreen = () => {
 
   // Function to handle profile deletion
   async function handleDeleteProfile() {
-    if (inputOldPasswd == null) {
+    if (inputOldPasswd == '') {
       Alert.alert('Please enter your password to confirm to delete profile picture.');
     } else {
       // Delete user document in Firestore from 'users' collection
@@ -254,24 +249,27 @@ const UpdateProfileScreen = () => {
         await reauthenticateWithCredential(user, credential);
 
         const userRef = doc(db, 'users', userId);
-        await deleteDoc(userRef);
-        console.log('User deleted collection');
-
-        // Delete all images under ProfilePicture folder associated with the user in Firebase Storage
-        const profilePicturesPath = `images/${userId}/ProfilePicture`;
+      // Delete all images under ProfilePicture folder associated with the user in Firebase Storage
+        const profilePicturesPath = `images/${userId}/`;
         await deleteFilesUnderPath(profilePicturesPath);
         console.log('User deleted Storage Profile Picture');
         // Delete all images under MealPictures folder associated with the user in Firebase Storage
         //  const mealPicturesPath = `images/${userId}/MealPictures`;
         // await deleteFilesUnderPath(mealPicturesPath);
         // Delete user account in Firebase Authentication
+
+                
+        await deleteDoc(userRef);
+        console.log('User deleted Firestore');
+  
         await deleteUser(user);
         console.log('Auth user delelted succefully.')
       }
       console.log('Profile, related data, and user account deleted successfully.');
+      Alert.alert('Profile deleted successfully');
+      navigation.replace("Login");
     }
   };
-
 
   function handleSignOut() {
     auth
@@ -354,7 +352,7 @@ const UpdateProfileScreen = () => {
               <Text onPress={confirmationUpdate} style={styles.buttonOutlineText}>Update Account</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.button}>
-              <Text onPress={handleDeleteProfile} style={styles.buttonOutlineDeleteText}>Delete Account</Text>
+              <Text onPress={confirmationDelete} style={styles.buttonOutlineDeleteText}>Delete Account</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.button}>
               <Text onPress={handleSignOut} style={styles.buttonText}>Sign Out</Text>

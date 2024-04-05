@@ -45,7 +45,7 @@ const globalStyles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'light',
     color: '#aba8a7',
-    marginBottom: '200px',
+    marginBottom: ' 200px',
   },
   //Buttons for the footer and camera. 
   controlButton: {

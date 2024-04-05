@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/core'
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, Image } from 'react-native'
+import { StyleSheet, Text, View, FlatList, Image, ScrollView } from 'react-native'
 import { auth, storage } from '../../firebaseConfig';
 import Footer from '../components/Footer';
 import globalStyles from '../styles/globalStyles';
@@ -31,8 +31,7 @@ const HomeScreen = () => {
         // Check if metadata.timeCreated is a valid timestamp
         // If valid, convert it to milliseconds
         const timestamp = new Date(metadata.timeCreated).getTime() || 0;
-    
-
+        
         // Return an object with download URL, image title, and timestamp
         return { downloadURL, imageTitle, timestamp };
       });

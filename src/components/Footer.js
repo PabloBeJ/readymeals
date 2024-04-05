@@ -1,17 +1,58 @@
-import React from 'react';
+import React,  {useEffect, useState} from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import globalStyles from '../styles/globalStyles';
 import { useNavigation } from '@react-navigation/native';
 import { Camera } from 'expo-camera';
+import { getAuth} from "firebase/auth";
+import { ref, getDownloadURL} from "firebase/storage";
+import { doc, getDoc} from "firebase/firestore";
+import { storage, db} from "../../firebaseConfig";
 
 
 const Footer = () => {
   //Navifate the different pages.
   const navigation = useNavigation();
+  const [image, setImage] = useState(null);
+   
+  useEffect(() => {
+ // Check if user is logged in
+ async function checkUserLoggedIn() {
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (user) {
+      fetchProfileData(user.uid);
+  } else {
+    // Handle case when user is not logged in
+    navigation.replace("Login");
+  }
+};
+    checkUserLoggedIn();
+  }, []);
+   // Fetch user profile data if userId is available
+   async function fetchProfileData(userId) {
+    try {
+      const userRef = doc(db, "users", userId);   
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        if (userData.profilePicture) {
+          // Get the download URL of the profile picture
+          const fileRef = ref(storage, `images/${userId}/ProfilePicture`);
+          //Downloads image File
+          const downloadURL = await getDownloadURL(fileRef);
+          //Set the image.
+          setImage(downloadURL);
+        }
+      }
+    } catch (error) {
+      console.log("Error Fetch " + error.message);
+    }
+  };
+
+  // Button actions for the button part of the app.
   function home() {
     navigation.replace('Home');
   }
-
   // Ask user for permision to use the camera is so it will take to the cameras if no error,
   async function uploadImage() {
     const { status } = await Camera.requestCameraPermissionsAsync();
@@ -29,7 +70,6 @@ const Footer = () => {
 
   return (
     <View style={styles.footer}>
-
       <TouchableOpacity onPress={home} style={[globalStyles.controlButton, styles.buttonMargin]}>
         <Image source={require("../assets/img/icon_img/home-icon.png")} style={globalStyles.imageIcon}
         />
@@ -43,14 +83,12 @@ const Footer = () => {
         />
       </TouchableOpacity>
       <TouchableOpacity onPress={profile} style={globalStyles.controlButton}>
-      <Image source={require("../assets/img/profilePicture.png")} style={globalStyles.imageProfile}
-        />
+      {image && <Image source={{ uri: image }} style={[globalStyles.imageIcon, {borderRadius: 20, }]} />}
       </TouchableOpacity>
 
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   footer: {
     flex: 1,

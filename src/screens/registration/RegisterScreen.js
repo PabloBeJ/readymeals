@@ -25,7 +25,6 @@ const LoginScreen = () => {
   };
 
   const Register = async () => {
-
     // Check if username is already taken
 /*    const isUsernameTaken = await checkUsernameExists(inputusername);
     if (isUsernameTaken) {
@@ -47,7 +46,6 @@ const LoginScreen = () => {
        email: inputemail,
        phone: inputphone,
        username: inputusername,
-       profilePicture: "default.png"
      });
      Alert.alert('Welcome. User: ' + inputusername+ ' Registered successfully!');
      navigation.replace('Home');
