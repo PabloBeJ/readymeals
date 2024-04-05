@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, I
 import { doc, updateDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db, storage } from '../../firebaseConfig'; // Assuming you have initialized Firebase app and exported `auth` and `db`
 import { ref, uploadBytes, getDownloadURL, deleteObject, listAll } from 'firebase/storage';
+import { getAuth, updateEmail, EmailAuthProvider, updatePassword, reauthenticateWithCredential, sendEmailVerification } from "firebase/auth";
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import globalStyles from '../styles/globalStyles';
@@ -10,12 +11,16 @@ const UpdateProfileScreen = () => {
   const [inputUsername, setInputUsername] = useState('');
   const [inputPhone, setInputPhone] = useState('');
   const [inputEmail, setInputEmail] = useState('');
+  const [userDataEmail, setUserDataEmail] = useState('');
   const [inputOldPasswd, setInputOldPasswd] = useState('');
   const [inputNewPasswd, setInputNewPasswd] = useState('');
   const [inputConfirmPasswd, setInputConfirmPasswd] = useState('');
   const [image, setImage] = useState(null);
   const [userId, setUserId] = useState(null); // State to hold userId
-  //Navigation
+
+
+  //Navigation to change scenary when signing out or deleting the account. 
+
   const navigation = useNavigation();
   useEffect(() => {
     // Check if user is logged in
@@ -24,14 +29,17 @@ const UpdateProfileScreen = () => {
       if (user) {
         setUserId(user.uid); // Set userId if user is logged in
         console.log('Usser is logged in. ' + user.uid);
+        const currentUser = auth.currentUser;
+        const userEmail = currentUser.email;
+        const formattedEmail = userEmail.replace('Email', '');
+        setUserDataEmail(formattedEmail); //Saves email value if i want to change email address. 
       } else {
         // Handle case when user is not logged in
-        console.log('User is not logged in');
+        navigation.replace("Login");
       }
     };
     checkUserLoggedIn();
   }, []);
-
   useEffect(() => {
     if (userId) {
       // Fetch user profile data if userId is available
@@ -61,7 +69,6 @@ const UpdateProfileScreen = () => {
       fetchProfileData();
     }
   }, [userId]);
-
   //Pick Image gotted from the offical expo document pick image. 
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
@@ -98,9 +105,12 @@ const UpdateProfileScreen = () => {
       { cancelable: false }
     );
   };
-  function confirmationDelete() {
+
+
+  //Confirmation if the user wants to delete their account.
+  const confirmationDelete = () => {
     Alert.alert(
-      'Confirm Deletion',
+      'Confirmation Delete',
       'Are you sure you want to delete your profile?',
       [
         {
@@ -115,7 +125,7 @@ const UpdateProfileScreen = () => {
       ],
       { cancelable: false }
     );
-  }
+  };
 
   //Update Profile and Image
   async function handleUpdateProfile() {
@@ -128,24 +138,66 @@ const UpdateProfileScreen = () => {
       const dataToUpdate = {
         username: inputUsername,
         phone: inputPhone,
-        email: inputEmail,
         profileImage: image,
       };
+      await updateDoc(userRef, dataToUpdate);
+      // Update user email in Firebase Authentication or Password
+      const user = auth.currentUser;
+      if (user && user.email !== inputEmail) {
+        if (inputOldPasswd == '') {
+          Alert.alert('Please Enter The password Field to change the email');
+          return;
+        } else {
+          const auth = getAuth();
+          console.log("Users current email " + userDataEmail);
+          // Re-authenticate the user with their current password
+          const credential = EmailAuthProvider.credential(userDataEmail, inputOldPasswd);
+          await reauthenticateWithCredential(user, credential);
+          await updateEmail(auth.currentUser, inputEmail);
+          await sendEmailVerification(auth.currentUser);
+          const userRef = doc(db, 'users', userId);
+          const dataToUpdate = {
+            email: inputEmail,
+          };
+          await updateDoc(userRef, dataToUpdate);
+          Alert.alert("A verification email has been sent to " + inputEmail + " To activate your account ");
+        }
+
+        if (inputNewPasswd != inputConfirmPasswd) {
+          Alert.alert("Passwords do not match");
+        } else if (inputNewPasswd == inputConfirmPasswd && inputOldPasswd == '') {
+          Alert.alert("Please enter your old password Before changing your password");
+        }
+        else {
+          const auth = getAuth();
+          const user = auth.currentUser;
+          // Re-authenticate the user with their current password
+          const credential = EmailAuthProvider.credential(user.email, inputOldPasswd);
+          await reauthenticateWithCredential(user, credential);
+          updatePassword(auth.currentUser, inputNewPasswd).then(() => {
+            console.log('Password updated');
+          }).catch((error) => {
+            console.log("Password Error Updated " + error.message);
+            // An error occurred
+            // ...
+          });
+        }
+      }
       if (image) {
         // Upload image to Firebase Storage and update profile with image URL
         await uploadImage(image, userId);
+        Alert.alert("Profile Picture Updated");
       }
-      await updateDoc(userRef, dataToUpdate);
 
       async function uploadImage(imageUri, userId) {
         try {
           const response = await fetch(imageUri);
           const blob = await response.blob();
-          const deleteRef = ref(storage, `images/${userId}/ProfilePictue`);
+          const deleteRef = ref(storage, `images/${userId}/ProfilePicture`);
           const fileRef = ref(storage, `images/${userId}/ProfilePicture`);
           // Delete the previous profile picture. And updates the new one.
           await deleteObject(deleteRef);
-          console.log("Deleted Successfully");
+          console.log("Image Deleted Successfully");
           await uploadBytes(fileRef, blob);
           const downloadURL = await getDownloadURL(fileRef);
           dataToUpdate.profileImage = downloadURL;
@@ -159,15 +211,8 @@ const UpdateProfileScreen = () => {
           const downloadURL = await getDownloadURL(fileRef);
           dataToUpdate.profileImage = downloadURL;
           console.log("File Upload First time");
-          Alert.alert('Profile updated successfully');
-        }
-        // Update user email in Firebase Authentication
-        const user = auth.currentUser;
-        if (user && user.email !== inputEmail) {
-          await user.updateEmail(inputEmail);
         }
       };
-      Alert.alert('Profile updated successfully');
     } catch (error) {
       console.error('Error updating user profile:', error.message);
       //Alert.alert('Failed to update profile', error.message);
@@ -196,38 +241,39 @@ const UpdateProfileScreen = () => {
   };
 
   // Function to handle profile deletion
-  const handleDeleteProfile = async () => {
-    try {
+  async function handleDeleteProfile() {
+    if (inputOldPasswd == null) {
+      Alert.alert('Please enter your password to confirm to delete profile picture.');
+    } else {
       // Delete user document in Firestore from 'users' collection
-      const userRef = doc(db, 'users', userId);
-      await deleteDoc(userRef);
-      console.log('User deleted collection');
-
-      // Delete all images under ProfilePicture folder associated with the user in Firebase Storage
-      const profilePicturesPath = `images/${userId}/ProfilePicture`;
-      await deleteFilesUnderPath(profilePicturesPath);
-      console.log('User deleted Storage Profile Picture');
-
-      // Delete all images under MealPictures folder associated with the user in Firebase Storage
-      //  const mealPicturesPath = `images/${userId}/MealPictures`;
-      // await deleteFilesUnderPath(mealPicturesPath);
-
-      // Delete user account in Firebase Authentication
+      const auth = getAuth();
       const user = auth.currentUser;
+      // Re-authenticate the user with their current password
+      const credential = EmailAuthProvider.credential(user.email, inputOldPasswd);
       if (user) {
+        await reauthenticateWithCredential(user, credential);
+
+        const userRef = doc(db, 'users', userId);
+        await deleteDoc(userRef);
+        console.log('User deleted collection');
+
+        // Delete all images under ProfilePicture folder associated with the user in Firebase Storage
+        const profilePicturesPath = `images/${userId}/ProfilePicture`;
+        await deleteFilesUnderPath(profilePicturesPath);
+        console.log('User deleted Storage Profile Picture');
+        // Delete all images under MealPictures folder associated with the user in Firebase Storage
+        //  const mealPicturesPath = `images/${userId}/MealPictures`;
+        // await deleteFilesUnderPath(mealPicturesPath);
+        // Delete user account in Firebase Authentication
         await deleteUser(user);
         console.log('Auth user delelted succefully.')
       }
       console.log('Profile, related data, and user account deleted successfully.');
-    } catch (error) {
-      console.error('Error deleting profile:', error.message);
-      // Handle error
     }
   };
-  function handleCancel(){
-    navigation.replace("Home");
-  }
-  function handleSignOut  ()  {
+
+
+  function handleSignOut() {
     auth
       .signOut()
       .then(() => {
@@ -238,83 +284,84 @@ const UpdateProfileScreen = () => {
   }
 
   return (
-    <ScrollView style={{flex: 1,  backgroundColor: '#22252A'}}>
-    <KeyboardAvoidingView style={[globalStyles.container, { paddingBottom: 50, marginBottom: 50 }]} behavior="padding">
-        <Text style={[globalStyles.title, {marginTop: 15}]}>Profile Details</Text>
-      <View style={globalStyles.titleContainer}>
-      </View>
-      <View style={styles.backgroundColor}>
-        <View style={styles.inputContainer}>
-          <View style={globalStyles.titleContainer}>
-        <Text style={globalStyles.textPlacehover}>Username:</Text>
-        <Text style={[globalStyles.textPlacehover , styles.containerRight,  {textAlign: 'right' }]}>Avatar:</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: '#22252A' }}>
+      <KeyboardAvoidingView style={[globalStyles.container, { paddingBottom: 25, marginBottom: 25 }]}>
+        <Text style={[globalStyles.title, { marginTop: 15 }]}>Profile Details</Text>
+        <View style={globalStyles.titleContainer}>
         </View>
-          <View style={globalStyles.titleContainer}>
+        <View style={styles.backgroundColor}>
+          <View style={styles.inputContainer}>
+            <View style={globalStyles.titleContainer}>
+              <Text style={globalStyles.textPlacehover}>Username:</Text>
+              <Text style={[globalStyles.textPlacehover, styles.containerRight, { textAlign: 'right' }]}>Avatar:</Text>
+            </View>
+            <View style={globalStyles.titleContainer}>
+              <TextInput
+                placeholder="Username"
+                value={inputUsername}
+                onChangeText={text => setInputUsername(text)}
+                style={[styles.input, { width: '70%' }]}
+              />
+              <TouchableOpacity onPress={pickImage}>
+
+                {image && <Image source={{ uri: image }} style={[styles.imageProfile, { marginLeft: 20, marginTop: -30, }]} />}
+              </TouchableOpacity>
+            </View>
+            <Text style={globalStyles.textPlacehover}>Email:</Text>
             <TextInput
-              placeholder="Username"
-              value={inputUsername}
-              onChangeText={text => setInputUsername(text)}
-              style={[styles.input, { width: '70%' }]}
+              placeholder="Email"
+              value={inputEmail}
+              onChangeText={text => setInputEmail(text)}
+              style={styles.input}
             />
-            <TouchableOpacity onPress={pickImage}>
-             
-              {image && <Image source={{ uri: image }} style={[styles.imageProfile, { marginLeft: 20, marginTop: -30, }]} />}
+            <Text style={globalStyles.textPlacehover}>Phone Number:</Text>
+            <TextInput
+              placeholder="Phone Number"
+              value={inputPhone}
+              onChangeText={text => setInputPhone(text)}
+              style={styles.input}
+            />
+            <Text style={globalStyles.text}>Change Password</Text>
+            <Text style={globalStyles.textPlacehover}>Old Password:</Text>
+            <TextInput
+              placeholder="Enter Your Old Password"
+              value={inputOldPasswd}
+              onChangeText={text => setInputOldPasswd(text)}
+              style={styles.input}
+              secureTextEntry
+            />
+            <Text style={globalStyles.textPlacehover}>New Password:</Text>
+            <TextInput
+              placeholder="Enter Your New Password"
+              value={inputNewPasswd}
+              onChangeText={text => setInputNewPasswd(text)}
+              style={styles.input}
+              secureTextEntry
+            />
+            <Text style={globalStyles.textPlacehover}>Confirm Password:</Text>
+            <TextInput
+              placeholder="Enter Your Confirm Password"
+              value={inputConfirmPasswd}
+              onChangeText={text => setInputConfirmPasswd(text)}
+              style={styles.input}
+              secureTextEntry
+            />
+          </View>
+          {/** Buttons to login or Register. */}
+          <View style={styles.buttonContainer}>
+
+            <TouchableOpacity style={styles.button}>
+              <Text onPress={confirmationUpdate} style={styles.buttonOutlineText}>Update Account</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button}>
+              <Text onPress={handleDeleteProfile} style={styles.buttonOutlineDeleteText}>Delete Account</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button}>
+              <Text onPress={handleSignOut} style={styles.buttonText}>Sign Out</Text>
             </TouchableOpacity>
           </View>
-          <Text style={globalStyles.textPlacehover}>Email:</Text>
-          <TextInput
-            placeholder="Email"
-            value={inputEmail}
-            onChangeText={text => setInputEmail(text)}
-            style={styles.input}
-          />
-             <Text style={globalStyles.textPlacehover}>Phone Number:</Text>
-          <TextInput
-            placeholder="Phone Number"
-            value={inputPhone}
-            onChangeText={text => setInputPhone(text)}
-            style={styles.input}
-          />
-          <Text style={globalStyles.text}>Change Password</Text>
-          <Text style={globalStyles.textPlacehover}>Old Password:</Text>
-          <TextInput
-            placeholder="Enter Your Old Password"
-            value={inputOldPasswd}
-            onChangeText={text => setInputOldPasswd(text)}
-            style={styles.input}
-          />
-           <Text style={globalStyles.textPlacehover}>New Password:</Text>
-          <TextInput
-            placeholder="Enter Your New Password"
-            value={inputNewPasswd}
-            onChangeText={text => setInputNewPasswd(text)}
-            style={styles.input}
-          />
-           <Text style={globalStyles.textPlacehover}>Confirm Password:</Text>
-          <TextInput
-            placeholder="Enter Your Confirm Password"
-            value={inputConfirmPasswd}
-            onChangeText={text => setInputConfirmPasswd(text)}
-            style={styles.input}
-          />
         </View>
-        {/** Buttons to login or Register. */}
-        <View style={globalStyles.container}>
-          <TouchableOpacity style={styles.button}>
-            <Text onPress={handleCancel} style={styles.buttonText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.buttonOutline]}>
-            <Text onPress={confirmationUpdate} style={styles.buttonOutlineText}>Update</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.buttonOutline]}>
-            <Text onPress={handleDeleteProfile} style={styles.buttonOutlineText}>Delete</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.buttonOutline]}>
-            <Text onPress={handleSignOut} style={styles.buttonOutlineText}>Sign Out</Text>
-          </TouchableOpacity>
-     </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
     </ScrollView>
   );
 };
@@ -328,7 +375,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end', // Aligns the child to the end of the parent container
     alignItems: 'flex-end', // Aligns the child to the right side of the parent container
- 
+
   },
   backgroundColor: {
     backgroundColor: 'black',
@@ -355,8 +402,8 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   button: {
-    backgroundColor: '#0782F9',
-    width: '30%',
+    backgroundColor: '#202225',
+    width: '100%',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
@@ -368,6 +415,9 @@ const styles = StyleSheet.create({
     borderColor: '#0782F9',
     borderWidth: 2,
   },
+  buttonOutlineDelete: {
+    backgroundColor: '#7A0A0A',
+  },
   buttonText: {
     color: 'white',
     fontWeight: '700',
@@ -375,6 +425,11 @@ const styles = StyleSheet.create({
   },
   buttonOutlineText: {
     color: '#0782F9',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  buttonOutlineDeleteText: {
+    color: '#EC1919',
     fontWeight: '700',
     fontSize: 16,
   },
