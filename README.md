@@ -68,6 +68,6 @@ Make sure you have the following installed:
 2. **Open the Expo Go app on your iOS or Android device.**
 3. **Scan the QR code from the Expo development server using the Expo Go app.**
 4. **Your app should now run on your device.**
-5. **Create an account and enjoy of the apps features. **
+5. **Create an account and enjoy of the apps features.**
 
 
