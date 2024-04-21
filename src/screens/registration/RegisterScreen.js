@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import globalStyles from '../../styles/globalStyles';
 //import { doc, collection, addDoc, setDoc, firestore } from "firebase/firestore";
-import {  collection,  getDocs, doc, setDoc , getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../../firebaseConfig';
 import firestore from '@react-native-firebase/firestore';
 const LoginScreen = () => {
@@ -14,11 +14,11 @@ const LoginScreen = () => {
   const [inputphone, setPhone] = useState('');
   const [inputusername, setUsername] = useState('');
   const navigation = useNavigation();
- 
+
   // Example Firestore Query
   const fetchData = async () => {
     const querySnapshot = await getDocs(collection(db, 'users'));
-    
+
     querySnapshot.forEach((doc) => {
       console.log(doc.id, ' => ', doc.data());
     });
@@ -26,93 +26,110 @@ const LoginScreen = () => {
 
   const Register = async () => {
     // Check if username is already taken
-/*    const isUsernameTaken = await checkUsernameExists(inputusername);
-    if (isUsernameTaken) {
-      Alert.alert('Username Taken', 'This username is already taken. Please choose another.');
+    /*    const isUsernameTaken = await checkUsernameExists(inputusername);
+        if (isUsernameTaken) {
+          Alert.alert('Username Taken', 'This username is already taken. Please choose another.');
+          return;
+        }console.log('Username Created1' + error.message);*/
+    try {
+      if (inputemail == '' || inputpassword == '' || inputconfirmPassword == '' || inputphone == '' || inputusername == '') {
+        Alert.alert('Please enter all the required fields');
+        return;
+      }
+      if (!inputpassword || !inputconfirmPassword || inputpassword !== inputconfirmPassword) {
+        Alert.alert('Passwords do not match');
+        return;
+      }
+      const regex = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.{8,})/; //   8 characters in length,  1 letter in uppercase,  1 letter in lowercase, 1 special character (!@#$&*),   1 number (0-9)
+      if (!inputpassword.match(regex)) {
+        Alert.alert("Password Requirements",
+        "Your password must contain:\n\n" +
+        "- At least 8 characters\n" +
+        "- At least 1 uppercase letter\n" +
+        "- At least 1 lowercase letter\n" +
+        "- At least 1 special character (!@#$&*)\n" +
+        "- At least 1 number (0-9)"
+      );
       return;
-    }console.log('Username Created1' + error.message);*/
-   try {
-  
-     if (!inputpassword || !inputconfirmPassword || inputpassword !== inputconfirmPassword) {
-       Alert.alert('Passwords do not match');
-     }
-     // Create user in Firebase Authentication
-     const userCredential = await createUserWithEmailAndPassword(auth, inputemail, inputpassword);
+      } 
+      // Create user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, inputemail, inputpassword);
 
-     const userId = userCredential.user.uid;
-     // Add user details to Firestore
-     const userRef = doc(db, "users", userId); // Correct collection name to "users"
-     await setDoc(userRef, {
-       email: inputemail,
-       phone: inputphone,
-       username: inputusername,
-     });
-     Alert.alert('Welcome. User: ' + inputusername+ ' Registered successfully!');
-     navigation.replace('Home');
-   } catch (error) {
-     console.error('Error creating user:', error.message);
-     Alert.alert('Error', error.message);
-   }
- };
+      const userId = userCredential.user.uid;
+      // Add user details to Firestore
+      const userRef = doc(db, "users", userId);
+      await setDoc(userRef, {
+        email: inputemail,
+        phone: inputphone,
+        username: inputusername,
+        profilePicture: "default.png"
+      });
+      Alert.alert('Welcome. User: ' + inputusername + ' Registered successfully!');
+      navigation.replace('Home');
+    } catch (error) {
+      console.error('Error creating user:', error.message);
+      Alert.alert('Error', error.message);
+    }
+  };
   async function Cancel() {
     navigation.replace('Login');
   };
   return (
-    <ScrollView style={{flex: 1,  backgroundColor: '#22252A'}}>
-    <KeyboardAvoidingView style={[globalStyles.container , {paddingBottom: 50}]} behavior="padding">
-      <View style={globalStyles.titleContainer}>
-        <Image
-          source={require("../../assets/img/LogoReadyMeals.jpg")}
-          style={[globalStyles.image, { marginRight: 20 }]}
-        />
-        <Text style={globalStyles.title}>Ready Meals</Text>
-      </View>
-      <View style={styles.backgroundColor}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            placeholder="Email"
-            value={inputemail}
-            onChangeText={text => setEmail(text)}
-            style={styles.input}
+    <ScrollView style={{ flex: 1, backgroundColor: '#22252A' }}>
+      <KeyboardAvoidingView style={[globalStyles.container, { paddingBottom: 50 }]} behavior="padding">
+        <View style={globalStyles.titleContainer}>
+          <Image
+            source={require("../../assets/img/LogoReadyMeals.jpg")}
+            style={[globalStyles.image, { marginRight: 20 }]}
           />
-          <TextInput
-            placeholder="Username"
-            value={inputusername}
-            onChangeText={text => setUsername(text)}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Password"
-            value={inputpassword}
-            onChangeText={text => setPassword(text)}
-            style={styles.input}
-            secureTextEntry
-          />
-          <TextInput
-            placeholder="Confirm Password"
-            value={inputconfirmPassword}
-            onChangeText={text => setConfirmPassword(text)}
-            style={styles.input}
-            secureTextEntry
-          />
-          <TextInput
-            placeholder="Phone Number"
-            value={inputphone}
-            onChangeText={text => setPhone(text)}
-            style={styles.input}
-          />
+          <Text style={globalStyles.title}>Ready Meals</Text>
         </View>
-        {/** Buttons to login or Register. */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity onPress={Register} style={styles.button}>
-            <Text style={styles.buttonText}>Register</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={Cancel} style={[styles.button, styles.buttonOutline]}>
-            <Text style={styles.buttonOutlineText}>Cancel</Text>
-          </TouchableOpacity>
+        <View style={styles.backgroundColor}>
+          <View style={styles.inputContainer}>
+            <TextInput
+              placeholder="Email"
+              value={inputemail}
+              onChangeText={text => setEmail(text)}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="Username"
+              value={inputusername}
+              onChangeText={text => setUsername(text)}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="Password"
+              value={inputpassword}
+              onChangeText={text => setPassword(text)}
+              style={styles.input}
+              secureTextEntry
+            />
+            <TextInput
+              placeholder="Confirm Password"
+              value={inputconfirmPassword}
+              onChangeText={text => setConfirmPassword(text)}
+              style={styles.input}
+              secureTextEntry
+            />
+            <TextInput
+              placeholder="Phone Number"
+              value={inputphone}
+              onChangeText={text => setPhone(text)}
+              style={styles.input}
+            />
+          </View>
+          {/** Buttons to login or Register. */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity onPress={Register} style={styles.button}>
+              <Text style={styles.buttonText}>Register</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={Cancel} style={[styles.button, styles.buttonOutline]}>
+              <Text style={styles.buttonOutlineText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
     </ScrollView>
   );
 };

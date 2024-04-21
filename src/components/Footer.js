@@ -13,7 +13,7 @@ const Footer = () => {
   //Navifate the different pages.
   const navigation = useNavigation();
   const [image, setImage] = useState(null);
-   
+  const [isPressed, setIsPressed] = useState(false);
   useEffect(() => {
  // Check if user is logged in
  async function checkUserLoggedIn() {
@@ -45,16 +45,22 @@ const Footer = () => {
         }
       }
     } catch (error) {
+      // Get the Default Image if it doesn't exist.
+          const fileRef = ref(storage, `images/default/cooking-947738_960_720.jpg`);
+          const downloadURL = await getDownloadURL(fileRef);
+          setImage(downloadURL);
       console.log("Error Fetch " + error.message);
     }
   };
 
   // Button actions for the button part of the app.
   function home() {
+    setIsPressed(!isPressed)
     navigation.replace('Home');
   }
   // Ask user for permision to use the camera is so it will take to the cameras if no error,
   async function uploadImage() {
+    setIsPressed(!isPressed);
     const { status } = await Camera.requestCameraPermissionsAsync();
     if (status == 'granted') {
       navigation.replace('Camera');
@@ -62,15 +68,17 @@ const Footer = () => {
     else Alert.alert('Access denied');
   };
   function favourites() {
+    setIsPressed(!isPressed);
     navigation.replace('Favourites');
   }
   function profile() {
+    setIsPressed(!isPressed);
     navigation.replace('Profile');
   }
 
   return (
     <View style={styles.footer}>
-      <TouchableOpacity onPress={home} style={[globalStyles.controlButton, styles.buttonMargin]}>
+      <TouchableOpacity onPress={home} style={globalStyles.controlButton}>
         <Image source={require("../assets/img/icon_img/home-icon.png")} style={globalStyles.imageIcon}
         />
       </TouchableOpacity>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Image, StyleSheet, ScrollView } from 'react-native';
 import { doc, updateDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db, storage } from '../../firebaseConfig'; // Assuming you have initialized Firebase app and exported `auth` and `db`
-import { ref, uploadBytes, getDownloadURL, deleteObject, listAll } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject, listAll,del } from 'firebase/storage';
 import { getAuth, deleteUser, updateEmail, EmailAuthProvider, updatePassword, reauthenticateWithCredential, sendEmailVerification } from "firebase/auth";
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -39,6 +39,7 @@ const UpdateProfileScreen = () => {
     checkUserLoggedIn();
   }, []);
   useEffect(() => {
+  
     if (userId) {
       // Fetch user profile data if userId is available
       async function fetchProfileData() {
@@ -62,6 +63,7 @@ const UpdateProfileScreen = () => {
           const fileRef = ref(storage, `images/default/cooking-947738_960_720.jpg`);
           const downloadURL = await getDownloadURL(fileRef);
           setImage(downloadURL);
+          console.log("Error gettign picture" +  console.error);
         }
       };
       fetchProfileData();
@@ -133,14 +135,14 @@ const UpdateProfileScreen = () => {
       const dataToUpdate = {
         username: inputUsername,
         phone: inputPhone,
-        profileImage: image,
+        profilePicture: image,
       };
       await updateDoc(userRef, dataToUpdate);
       // Update user email in Firebase Authentication or Password
       const user = auth.currentUser;
       if (user && user.email !== inputEmail) {
         if (inputOldPasswd == '') {
-          Alert.alert('Please Enter The password Field to change the email');
+          Alert.alert('Please Fill out the current password Field to change the email');
           return;
         } else {
           const auth = getAuth();
@@ -157,12 +159,27 @@ const UpdateProfileScreen = () => {
           await updateDoc(userRef, dataToUpdate);
           Alert.alert("A verification email has been sent to " + inputEmail + " To activate your account ");
         }
-
+      }
+        const regex = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.{8,})/; //   8 characters in length,  1 letter in uppercase,  1 letter in lowercase, 1 special character (!@#$&*),   1 number (0-9)
+        if(inputNewPasswd != ''){
         if (inputNewPasswd != inputConfirmPasswd) {
           Alert.alert("Passwords do not match");
+          return;
         } else if (inputNewPasswd == inputConfirmPasswd && inputOldPasswd == '') {
-          Alert.alert("Please enter your old password Before changing your password");
+          Alert.alert("Please enter your current password Before changing your password");
+          return;
         }
+        else if (!inputNewPasswd.match(regex)) {
+          Alert.alert("Password Requirements",
+          "Your password must contain:\n\n" +
+          "- At least 8 characters\n" +
+          "- At least 1 uppercase letter\n" +
+          "- At least 1 lowercase letter\n" +
+          "- At least 1 special character (!@#$&*)\n" +
+          "- At least 1 number (0-9)"
+        );
+        return;
+        } 
         else {
           const auth = getAuth();
           const user = auth.currentUser;
@@ -170,7 +187,7 @@ const UpdateProfileScreen = () => {
           const credential = EmailAuthProvider.credential(user.email, inputOldPasswd);
           await reauthenticateWithCredential(user, credential);
           updatePassword(auth.currentUser, inputNewPasswd).then(() => {
-            console.log('Password updated');
+            Alert.alert("Password updated successfully");
           }).catch((error) => {
             console.log("Password Error Updated " + error.message);
             // An error occurred
@@ -181,7 +198,6 @@ const UpdateProfileScreen = () => {
       if (image) {
         // Upload image to Firebase Storage and update profile with image URL
         await uploadImage(image, userId);
-        Alert.alert("Profile Picture Updated");
       }
 
       async function uploadImage(imageUri, userId) {
@@ -195,7 +211,8 @@ const UpdateProfileScreen = () => {
           console.log("Image Deleted Successfully");
           await uploadBytes(fileRef, blob);
           const downloadURL = await getDownloadURL(fileRef);
-          dataToUpdate.profileImage = downloadURL;
+          Alert.alert("Profile Picture Updated");
+          dataToUpdate.profilePicture = downloadURL;
           //   setImage(downloadURL); // Set image URL for display after successful upload
         } catch (error) {
           //If the file does not exist to delete it creates a new one. 
@@ -204,7 +221,7 @@ const UpdateProfileScreen = () => {
           const fileRef = ref(storage, `images/${userId}/ProfilePicture/`);
           await uploadBytes(fileRef, blob);
           const downloadURL = await getDownloadURL(fileRef);
-          dataToUpdate.profileImage = downloadURL;
+          dataToUpdate.profilePicture = downloadURL;
           console.log("File Upload First time");
         }
       };
@@ -214,31 +231,34 @@ const UpdateProfileScreen = () => {
     }
   };
 
-  // Function to delete all files under a folder path pattern
-  const deleteFilesUnderPath = async (folderPath) => {
-    try {
-      const folderRef = ref(storage, folderPath);
 
-      // List all items (files) in the folder
-      const folderItems = await listAll(folderRef);
+// Function to delete a user's entire content (profile picture and all food pictures)
+const deleteUseFolder = async (userId) => {
+  try {
+    // Delete Profile Picture
+    const profilePictureRef = ref(storage, `images/${userId}/ProfilePicture`);
+    await deleteObject(profilePictureRef);
+    console.log('Profile picture deleted successfully');
 
-      // Delete each file in the folder
-      const deletePromises = folderItems.items.map((item) => deleteObject(item.ref));
-
-      // Wait for all files to be deleted
-      await Promise.all(deletePromises);
-
-      console.log('All files under folder path deleted successfully.');
-    } catch (error) {
-      console.error('Error deleting files under folder path:', error.message);
-      // Handle error
+    // Delete all images in FoodPictures folder
+    const foodPicturesRef = ref(storage, `images/${userId}/FoodPictures/`);
+    const foodPicturesList = await listAll(foodPicturesRef);
+    
+    for (let i = 0; i < foodPicturesList.items.length; i++) {
+      await deleteObject(foodPicturesList.items[i]);
     }
-  };
+    
+    console.log('All food pictures deleted successfully');
 
+    console.log('User content deleted successfully');
+  } catch (error) {
+    console.error('Error deleting user content:', error);
+  }
+};
   // Function to handle profile deletion
   async function handleDeleteProfile() {
     if (inputOldPasswd == '') {
-      Alert.alert('Please enter your password to confirm to delete profile picture.');
+      Alert.alert('Please enter your Current Password to confirm to delete.');
     } else {
       // Delete user document in Firestore from 'users' collection
       const auth = getAuth();
@@ -249,19 +269,15 @@ const UpdateProfileScreen = () => {
         await reauthenticateWithCredential(user, credential);
 
         const userRef = doc(db, 'users', userId);
+        console.log("Getting User Id" + userId);
       // Delete all images under ProfilePicture folder associated with the user in Firebase Storage
-        const profilePicturesPath = `images/${userId}/`;
-        await deleteFilesUnderPath(profilePicturesPath);
+        await deleteUseFolder(userId);
         console.log('User deleted Storage Profile Picture');
-        // Delete all images under MealPictures folder associated with the user in Firebase Storage
-        //  const mealPicturesPath = `images/${userId}/MealPictures`;
-        // await deleteFilesUnderPath(mealPicturesPath);
-        // Delete user account in Firebase Authentication
-
-                
+       
+        //Delete Firestore Content
         await deleteDoc(userRef);
         console.log('User deleted Firestore');
-  
+        //Delete Authenticated User
         await deleteUser(user);
         console.log('Auth user delelted succefully.')
       }
@@ -320,9 +336,9 @@ const UpdateProfileScreen = () => {
               style={styles.input}
             />
             <Text style={globalStyles.text}>Change Password</Text>
-            <Text style={globalStyles.textPlacehover}>Old Password:</Text>
+            <Text style={globalStyles.textPlacehover}>Current Password:</Text>
             <TextInput
-              placeholder="Enter Your Old Password"
+              placeholder="Enter Your Current Password"
               value={inputOldPasswd}
               onChangeText={text => setInputOldPasswd(text)}
               style={styles.input}
