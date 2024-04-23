@@ -79,16 +79,20 @@ const Footer = () => {
   return (
     <View style={styles.footer}>
       <TouchableOpacity onPress={home} style={globalStyles.controlButton}>
+        {/*Home button */}
         <Image source={require("../assets/img/icon_img/home-icon.png")} style={globalStyles.imageIcon}
         />
       </TouchableOpacity>
+      {/*Add food photo button */}
       <TouchableOpacity onPress={uploadImage} style={globalStyles.controlButton}>
         <Image source={require("../assets/img/icon_img/plus-icon.png")} style={globalStyles.imageIcon}
         />
+        {/*Saved button */}
       </TouchableOpacity>
       <TouchableOpacity onPress={favourites} style={globalStyles.controlButton}>
         <Image source={require("../assets/img/icon_img/star-icon.png")} style={globalStyles.imageIcon}
         />
+        {/*Profile button */}
       </TouchableOpacity>
       <TouchableOpacity onPress={profile} style={globalStyles.controlButton}>
       {image && <Image source={{ uri: image }} style={[globalStyles.imageIcon, {borderRadius: 20, }]} />}

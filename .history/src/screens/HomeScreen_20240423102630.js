@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
-import { db,storage } from '../../firebaseConfig';
-import {query,  doc, getDoc, collection, getDocs, orderBy } from 'firebase/firestore'; // Import orderBy
+import { db } from '../../firebaseConfig';
+import { doc, getDoc, collection, getDocs, orderBy } from 'firebase/firestore'; // Import orderBy
 import globalStyles from '../styles/globalStyles';
 import Footer from '../components/Footer';
-import { ref, getDownloadURL } from 'firebase/storage'; 
+
 const HomeScreen = () => {
   const [imageData, setImageData] = useState([]);
   useEffect(() => {
     const fetchImageData = async () => {
       try {
-      const querySnapshot = await getDocs(query(collection(db, 'images'), orderBy('timestamp', 'desc')));
+        const imagesRef = collection(db, 'images');ç
+        const querySnapshot = await getDocs(orderBy(imagesRef, 'timestamp', 'desc')); // Order by timestamp in descending order
+        console.log('imagesRef1:', querySnapshot); // Log imagesRef to check its value
         const data = [];
+  
         for (const docSnapshot of querySnapshot.docs) {
           const imageInfo = docSnapshot.data();
           const userRef = doc(db, 'users', imageInfo.userId);
@@ -19,20 +22,7 @@ const HomeScreen = () => {
           if (userSnap.exists()) {
             const userData = userSnap.data();
             if (userData && userData.username && userData.profilePicture) {
-              if(userData.profilePicture =="default.png" || !userData.profilePicture) {
-                console.log(`Profile picture does not exist for user: ${userData.username}`);
-                // If profile picture doesn't exist or is empty, fetch default image from storage
-                const fileRef = ref(storage, `images/default/cooking-947738_960_720.jpg`);
-                const downloadURL = await getDownloadURL(fileRef);
-                data.push({
-                  imageUrl: imageInfo.imageUrl,
-                  title: imageInfo.imageTitle,
-                  userId: imageInfo.userId,
-                  username: userData.username,
-                  profilePictureURL: downloadURL
-                });
-               }else{
-                data.push({
+              data.push({
                 imageUrl: imageInfo.imageUrl,
                 title: imageInfo.imageTitle,
                 userId: imageInfo.userId,
@@ -40,9 +30,9 @@ const HomeScreen = () => {
                 profilePictureURL: userData.profilePicture
               });
             }
-            }
           }
         }
+  
         setImageData(data);
       } catch (error) {
         console.error('Error getting documents:', error);

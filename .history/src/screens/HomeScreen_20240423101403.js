@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
-import { db,storage } from '../../firebaseConfig';
-import {query,  doc, getDoc, collection, getDocs, orderBy } from 'firebase/firestore'; // Import orderBy
+import { db, storage } from '../../firebaseConfig';
+import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { ref, getDownloadURL } from 'firebase/storage';
 import globalStyles from '../styles/globalStyles';
 import Footer from '../components/Footer';
-import { ref, getDownloadURL } from 'firebase/storage'; 
+
 const HomeScreen = () => {
   const [imageData, setImageData] = useState([]);
+
   useEffect(() => {
     const fetchImageData = async () => {
       try {
-      const querySnapshot = await getDocs(query(collection(db, 'images'), orderBy('timestamp', 'desc')));
+        const imagesRef = collection(db, 'images');
+        const querySnapshot = await query(imagesRef, orderBy('timestamp', 'desc')); // Order by timestamp in descending order
         const data = [];
         for (const docSnapshot of querySnapshot.docs) {
           const imageInfo = docSnapshot.data();
@@ -19,27 +22,13 @@ const HomeScreen = () => {
           if (userSnap.exists()) {
             const userData = userSnap.data();
             if (userData && userData.username && userData.profilePicture) {
-              if(userData.profilePicture =="default.png" || !userData.profilePicture) {
-                console.log(`Profile picture does not exist for user: ${userData.username}`);
-                // If profile picture doesn't exist or is empty, fetch default image from storage
-                const fileRef = ref(storage, `images/default/cooking-947738_960_720.jpg`);
-                const downloadURL = await getDownloadURL(fileRef);
-                data.push({
-                  imageUrl: imageInfo.imageUrl,
-                  title: imageInfo.imageTitle,
-                  userId: imageInfo.userId,
-                  username: userData.username,
-                  profilePictureURL: downloadURL
-                });
-               }else{
-                data.push({
+              data.push({
                 imageUrl: imageInfo.imageUrl,
                 title: imageInfo.imageTitle,
                 userId: imageInfo.userId,
                 username: userData.username,
                 profilePictureURL: userData.profilePicture
               });
-            }
             }
           }
         }
@@ -50,6 +39,7 @@ const HomeScreen = () => {
     };
     fetchImageData();
   }, []);
+  
 
   return (
     <View style={styles.container}>
@@ -82,7 +72,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     flexGrow: 1,
-    paddingBottom: 150,
+    paddingBottom:150,
     backgroundColor: '#22252A',
   },
   titleContainer: {

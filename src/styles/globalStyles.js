@@ -55,8 +55,16 @@ const globalStyles = StyleSheet.create({
     width: 50,
     justifyContent: 'center',
     alignItems: 'center',
-
   },
+  buttonForm: {
+    backgroundColor: '#0782F9',
+    width: '60%',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+
   controlButtonText: {
     fontSize: 20,
   },

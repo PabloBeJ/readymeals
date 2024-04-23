@@ -1,54 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
-import { db,storage } from '../../firebaseConfig';
+import { db } from '../../firebaseConfig';
 import {query,  doc, getDoc, collection, getDocs, orderBy } from 'firebase/firestore'; // Import orderBy
 import globalStyles from '../styles/globalStyles';
 import Footer from '../components/Footer';
-import { ref, getDownloadURL } from 'firebase/storage'; 
+
 const HomeScreen = () => {
   const [imageData, setImageData] = useState([]);
   useEffect(() => {
-    const fetchImageData = async () => {
+    const getImageData = async () => {
       try {
-      const querySnapshot = await getDocs(query(collection(db, 'images'), orderBy('timestamp', 'desc')));
-        const data = [];
-        for (const docSnapshot of querySnapshot.docs) {
-          const imageInfo = docSnapshot.data();
-          const userRef = doc(db, 'users', imageInfo.userId);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            const userData = userSnap.data();
-            if (userData && userData.username && userData.profilePicture) {
-              if(userData.profilePicture =="default.png" || !userData.profilePicture) {
-                console.log(`Profile picture does not exist for user: ${userData.username}`);
-                // If profile picture doesn't exist or is empty, fetch default image from storage
-                const fileRef = ref(storage, `images/default/cooking-947738_960_720.jpg`);
-                const downloadURL = await getDownloadURL(fileRef);
-                data.push({
-                  imageUrl: imageInfo.imageUrl,
-                  title: imageInfo.imageTitle,
-                  userId: imageInfo.userId,
-                  username: userData.username,
-                  profilePictureURL: downloadURL
-                });
-               }else{
-                data.push({
-                imageUrl: imageInfo.imageUrl,
-                title: imageInfo.imageTitle,
-                userId: imageInfo.userId,
-                username: userData.username,
-                profilePictureURL: userData.profilePicture
-              });
-            }
-            }
-          }
-        }
-        setImageData(data);
+        const imagesRef = collection(db, 'images');
+        const q = query(imagesRef, orderBy('timestamp', 'desc')); // Order by timestamp in descending order
+        const querySnapshot = await getDocs(q);
+
+        querySnapshot.forEach((docSnapshot) => {
+          const imageData = docSnapshot.data();
+          const timestamp = imageData.timestamp; // Access the timestamp field from the document data
+          console.log('Timestamp:', timestamp);
+        });
       } catch (error) {
         console.error('Error getting documents:', error);
       }
     };
-    fetchImageData();
+
+    getImageData();
   }, []);
 
   return (

@@ -1,59 +1,57 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
-import { db,storage } from '../../firebaseConfig';
-import {query,  doc, getDoc, collection, getDocs, orderBy } from 'firebase/firestore'; // Import orderBy
+import { db, storage } from '../../firebaseConfig'; // Import the `db` and `storage` objects
+import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { ref, getDownloadURL } from 'firebase/storage'; // Import the `ref` and `getDownloadURL` functions
 import globalStyles from '../styles/globalStyles';
 import Footer from '../components/Footer';
-import { ref, getDownloadURL } from 'firebase/storage'; 
 const HomeScreen = () => {
   const [imageData, setImageData] = useState([]);
+
   useEffect(() => {
     const fetchImageData = async () => {
       try {
-      const querySnapshot = await getDocs(query(collection(db, 'images'), orderBy('timestamp', 'desc')));
+        const imagesRef = collection(db, 'images'); // Referencia a la colección 'images'
+        const querySnapshot = await getDocs(imagesRef); // Recupera todos los documentos de la colección 'images'
         const data = [];
+
         for (const docSnapshot of querySnapshot.docs) {
           const imageInfo = docSnapshot.data();
-          const userRef = doc(db, 'users', imageInfo.userId);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            const userData = userSnap.data();
-            if (userData && userData.username && userData.profilePicture) {
-              if(userData.profilePicture =="default.png" || !userData.profilePicture) {
-                console.log(`Profile picture does not exist for user: ${userData.username}`);
-                // If profile picture doesn't exist or is empty, fetch default image from storage
-                const fileRef = ref(storage, `images/default/cooking-947738_960_720.jpg`);
-                const downloadURL = await getDownloadURL(fileRef);
+
+          // Verifica que la URL de la imagen y el userId estén definidos
+          if (imageInfo && imageInfo.imageUrl && imageInfo.userId) {
+
+            const userRef = doc(db, 'users', imageInfo.userId); // Referencia al documento del usuario
+            const userSnap = await getDoc(userRef); // Recupera el documento del usuario
+            if (userSnap.exists()) {
+              const userData = userSnap.data(); // Extrae los datos del usuario
+              // Verifica que todos los datos del usuario necesarios estén presentes
+              if (userData && userData.username && userData.profilePicture) {
+
                 data.push({
                   imageUrl: imageInfo.imageUrl,
-                  title: imageInfo.imageTitle,
+                  title: imageInfo.title,
                   userId: imageInfo.userId,
                   username: userData.username,
-                  profilePictureURL: downloadURL
+                  profilePictureURL: userData.profilePicture
                 });
-               }else{
-                data.push({
-                imageUrl: imageInfo.imageUrl,
-                title: imageInfo.imageTitle,
-                userId: imageInfo.userId,
-                username: userData.username,
-                profilePictureURL: userData.profilePicture
-              });
-            }
+              }
             }
           }
         }
+
         setImageData(data);
       } catch (error) {
         console.error('Error getting documents:', error);
       }
     };
+
     fetchImageData();
   }, []);
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+    <View>
+      <ScrollView>
         {imageData.map((item, index) => (
           <View key={index} style={globalStyles.container}>
             <View style={styles.titleContainer}>
@@ -64,12 +62,12 @@ const HomeScreen = () => {
               <Text style={globalStyles.text}>{item.username}  </Text>
             </View>
             <Image
-              source={{ uri: item.imageUrl }}
-              style={styles.image}
-            />
+              source={{ uri: item.imageUrl }} style={styles.image} />
             <Text style={globalStyles.text}>{item.title}</Text>
+
           </View>
         ))}
+
       </ScrollView>
       <Footer />
     </View>
@@ -77,13 +75,9 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    flexGrow: 1,
-    paddingBottom: 150,
-    backgroundColor: '#22252A',
+  ScrollView: {
+    paddingBottom: 100,
+    backgroundColor: '#22252A'
   },
   titleContainer: {
     flexDirection: 'row',
@@ -100,6 +94,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     borderRadius: 10,
   },
-});
+})
 
 export default HomeScreen;

@@ -1,0 +1,1 @@
+ERROR  Error getting documents: [TypeError: Cannot read property '_internalPath' of undefined]

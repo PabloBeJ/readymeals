@@ -20,7 +20,7 @@ const LoginScreen = () => {
     } catch (error) {
       console.error('Login failed:', error.message);
       Alert.alert('Error', error.message);
-    }
+    } 
   };
   return (
     <KeyboardAvoidingView style={globalStyles.container} behavior="padding">
@@ -37,22 +37,22 @@ const LoginScreen = () => {
             placeholder="Email...."
             value={email}
             onChangeText={text => setEmail(text)}
-            style={[styles.input, { marginBottom: 10 }]} // Added marginBottom to separate inputs
+            style={[styles.input, { marginBottom: 10 }]} 
           />
           <TextInput
             placeholder="Password...."
             value={password}
             onChangeText={text => setPassword(text)}
-            style={[styles.input, { marginBottom: 20 }]} // Added marginBottom to separate inputs
+            style={[styles.input, { marginBottom: 20 }]} 
             secureTextEntry
           />
         </View>
         {/** Buttons to login or Register. */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity onPress={Login} style={styles.button}>
+          <TouchableOpacity onPress={Login} style={globalStyles.buttonForm}>
             <Text style={styles.buttonText}>Login</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={Register} style={[styles.button, styles.buttonOutline]}>
+          <TouchableOpacity onPress={Register} style={[globalStyles.buttonForm, styles.buttonOutline]}>
             <Text style={styles.buttonOutlineText}>Register</Text>
           </TouchableOpacity>
         </View>
@@ -86,14 +86,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
   },
-  button: {
-    backgroundColor: '#0782F9',
-    width: '60%',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
+
   buttonOutline: {
     backgroundColor: 'white',
     marginTop: 5,

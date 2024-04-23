@@ -5,8 +5,8 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import globalStyles from '../../styles/globalStyles';
 //import { doc, collection, addDoc, setDoc, firestore } from "firebase/firestore";
 import { collection, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../../firebaseConfig';
-import firestore from '@react-native-firebase/firestore';
+import { auth, db , storage } from '../../../firebaseConfig';
+import { ref, uploadBytes, getDownloadURL, deleteObject, listAll,del }  from 'firebase/storage';
 const LoginScreen = () => {
   const [inputemail, setEmail] = useState('');
   const [inputpassword, setPassword] = useState('');
@@ -24,13 +24,22 @@ const LoginScreen = () => {
     });
   };
 
+  // GET DEfault profile picture
+  const getDefaultProfilePictureURL = async () => {
+    const defaultProfilePicRef = ref(storage, `images/default/cooking-947738_960_720.jpg`);
+    try {
+      const url = await getDownloadURL(defaultProfilePicRef);
+      console.log("Got profile Picture. " + url);
+      return url;
+    } catch (error) {
+      console.error("Error getting default profile picture:", error);
+      return null;
+    }
+  };
+
+
+
   const Register = async () => {
-    // Check if username is already taken
-    /*    const isUsernameTaken = await checkUsernameExists(inputusername);
-        if (isUsernameTaken) {
-          Alert.alert('Username Taken', 'This username is already taken. Please choose another.');
-          return;
-        }console.log('Username Created1' + error.message);*/
     try {
       if (inputemail == '' || inputpassword == '' || inputconfirmPassword == '' || inputphone == '' || inputusername == '') {
         Alert.alert('Please enter all the required fields');
@@ -43,15 +52,15 @@ const LoginScreen = () => {
       const regex = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.{8,})/; //   8 characters in length,  1 letter in uppercase,  1 letter in lowercase, 1 special character (!@#$&*),   1 number (0-9)
       if (!inputpassword.match(regex)) {
         Alert.alert("Password Requirements",
-        "Your password must contain:\n\n" +
-        "- At least 8 characters\n" +
-        "- At least 1 uppercase letter\n" +
-        "- At least 1 lowercase letter\n" +
-        "- At least 1 special character (!@#$&*)\n" +
-        "- At least 1 number (0-9)"
-      );
-      return;
-      } 
+          "Your password must contain:\n\n" +
+          "- At least 8 characters\n" +
+          "- At least 1 uppercase letter\n" +
+          "- At least 1 lowercase letter\n" +
+          "- At least 1 special character (!@#$&*)\n" +
+          "- At least 1 number (0-9)"
+        );
+        return;
+      }
       // Create user in Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, inputemail, inputpassword);
 
@@ -64,6 +73,23 @@ const LoginScreen = () => {
         username: inputusername,
         profilePicture: "default.png"
       });
+  
+
+// Get the download URL of the default image
+const defaultImageRef = ref(storage, 'images/default/cooking-947738_960_720.jpg');
+const defaultImageUrl = await getDownloadURL(defaultImageRef);
+
+// Fetch the default image as a blob
+const defaultImageBlob = await fetch(defaultImageUrl).then(res => res.blob());
+
+// Upload the default image blob to the user's ProfilePicture folder
+const userImageRef = ref(storage, `images/${userId}/ProfilePicture`);
+await uploadBytes(userImageRef, defaultImageBlob);
+
+   // Display success message or handle navigation
+   console.log("Default image uploaded successfully to user's ProfilePicture folder.");
+
+
       Alert.alert('Welcome. User: ' + inputusername + ' Registered successfully!');
       navigation.replace('Home');
     } catch (error) {
@@ -121,10 +147,10 @@ const LoginScreen = () => {
           </View>
           {/** Buttons to login or Register. */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity onPress={Register} style={styles.button}>
+            <TouchableOpacity onPress={Register} style={globalStyles.buttonForm}>
               <Text style={styles.buttonText}>Register</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={Cancel} style={[styles.button, styles.buttonOutline]}>
+            <TouchableOpacity onPress={Cancel} style={[globalStyles.buttonForm, styles.buttonOutline]}>
               <Text style={styles.buttonOutlineText}>Cancel</Text>
             </TouchableOpacity>
           </View>

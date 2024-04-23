@@ -5,7 +5,7 @@ import { storage } from '../../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 import { ref, uploadBytes, getDownloadURL} from 'firebase/storage';
 import { db, auth } from '../../firebaseConfig';
-import { collection, getDocs, doc, setDoc, getDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import globalStyles from '../styles/globalStyles';
 
@@ -83,14 +83,16 @@ export default function CameraScreen() {
       console.log("Image uploaded successfully. Download URL:", downloadURL);
       console.log("Hello");
        // Add user details to Firestore
+
+      
        const randomId = `${userId}_${Date.now().toString(36)}${Math.random().toString(36).substr(2, 5)}`;
+    
        const userRef = doc(db, "images", randomId);
        console.log("UserIDChecker :",  userRef);
        await setDoc(userRef, {
          imageUrl: downloadURL,
          userId: userId,
-         imageTitle: title,
-         timestamp: serverTimestamp(),
+         imageTitle:
        });   
       setImage(downloadURL); // Set image URL for display after successful upload
       navigation.replace('Home');
