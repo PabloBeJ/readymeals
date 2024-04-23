@@ -25,12 +25,12 @@ const AppNavigator = () => {
         }}
       >
         {/* Each Stack.Screen should be directly inside Stack.Navigator */}
+        <Stack.Screen name="Edit" component={EditScreen} />
         <Stack.Screen options={{ headerShown: false }} name="Login" component={LoginScreen} />
         <Stack.Screen options={{ headerShown: false }} name="Register" component={RegisterScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Camera" component={CameraScreen} />
         <Stack.Screen name="Favourites" component={FavouritesScreen} />
-        <Stack.Screen name="Edit" component={EditScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Setting" component={SettingScreen} />
        

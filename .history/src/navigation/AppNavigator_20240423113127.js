@@ -6,10 +6,9 @@ import HomeScreen from "../screens/HomeScreen";
 import LoginScreen from "../screens/registration/LoginScreen";
 import RegisterScreen from "../screens/registration/RegisterScreen";
 import CameraScreen from "../screens/CameraScreen";
-import ProfileScreen from "../screens/user/SettingScreen";
-import SettingScreen from "../screens/user/ProfileScreen";
-import FavouritesScreen from "../screens/user/FavouritesScreen";
-import EditScreen from "../screens/EditScreen";
+import ProfileScreen from "../screens/user/ProfileScreen";
+import SettingScreen from "../screens/user/SettingScreen";
+import FavouritesScreen from "../screens/FavouritesScreen";
 
 const Stack = createNativeStackNavigator();
 const AppNavigator = () => {
@@ -30,10 +29,8 @@ const AppNavigator = () => {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Camera" component={CameraScreen} />
         <Stack.Screen name="Favourites" component={FavouritesScreen} />
-        <Stack.Screen name="Edit" component={EditScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Setting" component={SettingScreen} />
-       
       </Stack.Navigator>
     </NavigationContainer>
   );

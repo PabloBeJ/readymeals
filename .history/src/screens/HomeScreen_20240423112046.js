@@ -71,7 +71,7 @@ const HomeScreen = () => {
                 source={{ uri: item.profilePictureURL }}
                 style={globalStyles.image}
               />
-              <Text style={[globalStyles.text, {marginLeft:5}]}>{item.username}  </Text>
+              <Text style={[globalStyles.text, {marginLeft:10}]}>{item.username}  </Text>
             </View>
             <Image
               source={{ uri: item.imageUrl }}

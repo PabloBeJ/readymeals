@@ -14,8 +14,6 @@ export default function CameraScreen() {
   const [userId, setUserId] = useState(null); // State to hold userId
   const text = "Upload Image"; // State to hold userId
   const navigation = useNavigation();
-
-
   useEffect(() => {
     const fetchUserData = async () => {
       const user = auth.currentUser; // Get the current user
@@ -23,9 +21,10 @@ export default function CameraScreen() {
         const fetchuserId = user.uid;
         // Set Id for use later
         setUserId(fetchuserId);
-        // Opens camera
+        //Opens camera
         takePhoto();
-      } else {
+      }
+      else {
         // Handle case when user is not logged in
         navigation.replace("Login");
       }
