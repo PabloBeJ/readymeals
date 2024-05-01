@@ -16,26 +16,11 @@ export default function EditScreen() {
     const [h1Title, seth1Title] = useState('');
     const navigation = useNavigation();
     const route = useRoute();
-    const [userId, setUserId] = useState(null); // State to hold userId
-    const { imageUri, text,  Titletext } = route.params;
-
+    const { imageUri, text, userId, Titletext } = route.params;
     useEffect(() => {
-        // Check if user is logged in
-        async function checkUserLoggedIn() {
-          const user = auth.currentUser;
-          if (user) {
-            setUserId(user.uid); // Set userId if user is logged in
-            setImage(imageUri);
-            seth1Title(text);
-          } else {
-            // Handle case when user is not logged in
-            navigation.replace("Login");
-          }
-        };
-        checkUserLoggedIn();
-      }, []);
-
-
+        setImage(imageUri);
+        seth1Title(text);
+    }, [imageUri, text]);
     // Uploads And creates a new picture
     const uploadImage = async () => {
         try {

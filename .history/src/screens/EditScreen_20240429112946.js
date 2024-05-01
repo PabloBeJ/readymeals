@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Image, TextInput, TouchableOpacity, StyleSheet, Text, Alert, ScrollView } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { storage } from '../../firebaseConfig';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, auth } from '../../firebaseConfig';
+import { db, auth, storage  } from '../../firebaseConfig';
 import { collection, query, getDocs, doc, setDoc, updateDoc, getDoc, Docs, serverTimestamp, where, deleteDoc } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
 import globalStyles from '../styles/globalStyles';
@@ -17,23 +15,23 @@ export default function EditScreen() {
     const navigation = useNavigation();
     const route = useRoute();
     const [userId, setUserId] = useState(null); // State to hold userId
-    const { imageUri, text,  Titletext } = route.params;
+    const { imageUri, text, Titletext } = route.params;
 
     useEffect(() => {
         // Check if user is logged in
         async function checkUserLoggedIn() {
-          const user = auth.currentUser;
-          if (user) {
-            setUserId(user.uid); // Set userId if user is logged in
-            setImage(imageUri);
-            seth1Title(text);
-          } else {
-            // Handle case when user is not logged in
-            navigation.replace("Login");
-          }
-        };
+            const user = auth.currentUser;
+            if (user) {
+                setUserId(user.uid); // Set userId if user is logged in
+                setImage(imageUri);
+                seth1Title(text);
+            } else {
+                // Handle case when user is not logged in
+                navigation.replace("Login");
+            }
+        }; an
         checkUserLoggedIn();
-      }, []);
+    }, []);
 
 
     // Uploads And creates a new picture
@@ -71,9 +69,9 @@ export default function EditScreen() {
                 const doc = querySnapshot.docs[0]; // Get the first document from the query results
                 // Update the title field of the matched document
                 await updateDoc(doc.ref, { imageTitle: title });
-                Alert.alert("Title: " + title + "updated successfully!");
+                Alert.alert("Title: " + title + " Updated successfully!");
                 navigation.replace('Profile');
-            } 
+            }
         } catch (error) {
             console.error("Error updating title in Firestore: ", error);
         }
@@ -89,6 +87,11 @@ export default function EditScreen() {
                 const doc = querySnapshot.docs[0]; // Get the first document from the query results
                 // Update the title field of the matched document
                 await deleteDoc(doc.ref);
+                // Get the filename from the image URL
+                const filename = imageUri.split('/').pop();
+                // Delete the file from Firebase Storage
+                const storageRef = ref(storage, `images/${filename}`);
+                await deleteObject(storageRef);
                 Alert.alert("Image Deleted Successfully");
                 navigation.replace('Profile');
             } else {

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { db, storage } from '../../firebaseConfig';
-import { query, doc, getDoc, collection, getDocs, orderBy} from 'firebase/firestore'; // Import orderBy
-import { ref, getDownloadURL} from 'firebase/storage'; // Import orderBy
+import { db } from '../../firebaseConfig';
+import { query, doc, getDoc, collection, getDocs, orderBy } from 'firebase/firestore'; // Import orderBy
 import globalStyles from '../styles/globalStyles';
 import Footer from '../components/Footer';
 

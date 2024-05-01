@@ -1,39 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
 import { db, storage } from '../../firebaseConfig';
-import { query, doc, getDoc, collection, getDocs, orderBy} from 'firebase/firestore'; // Import orderBy
-import { ref, getDownloadURL} from 'firebase/storage'; // Import orderBy
+import { query, doc, getDoc, collection, getDocs, orderBy } from 'firebase/firestore'; // Import orderBy
 import globalStyles from '../styles/globalStyles';
 import Footer from '../components/Footer';
-
+import { ref, getDownloadURL } from 'firebase/storage';
 const HomeScreen = () => {
   const [imageData, setImageData] = useState([]);
-
-  // Function to handle saving a recipe
-  const handleSaveRecipe = (recipeId) => {
-    // Implement saving logic here
-    console.log('Recipe saved with ID:', recipeId);
-  };
-
   useEffect(() => {
     const fetchImageData = async () => {
       try {
-        // Fetch image data from Firestore
+        //Goes to firestroe and orders all images by timestamp most recent at the top
         const querySnapshot = await getDocs(query(collection(db, 'images'), orderBy('timestamp', 'desc')));
+        //Array to create for later
         const data = [];
-
-        // Iterate over the query snapshot
+        // for loop of all contneet
         for (const docSnapshot of querySnapshot.docs) {
+          //Gets data Api for the image location
           const imageInfo = docSnapshot.data();
+          //Opens firestore of users that has the same ID (To see who uopload it)
           const userRef = doc(db, 'users', imageInfo.userId);
           const userSnap = await getDoc(userRef);
+          // If user exist
           if (userSnap.exists()) {
             const userData = userSnap.data();
             //Gets the users username and profile pcitre
             if (userData && userData.username && userData.profilePicture) {
               // If the user exist but does not have any profile picture a defualt image will be set. 
               if (userData.profilePicture == "default.png" || !userData.profilePicture) {
-                console.log(`Profile picture does not exist for user: ${userData.username}`);
                 // If profile picture doesn't exist or is empty, fetch default image from storage
                 const fileRef = ref(storage, `images/default/cooking-947738_960_720.jpg`);
                 const downloadURL = await getDownloadURL(fileRef);
@@ -76,18 +70,13 @@ const HomeScreen = () => {
                 source={{ uri: item.profilePictureURL }}
                 style={globalStyles.image}
               />
-              <Text style={[globalStyles.text , { marginLeft: 5 }]}>{item.username}  </Text>
+              <Text style={[globalStyles.text, {marginLeft:5}]}>{item.username}  </Text>
             </View>
             <Image
               source={{ uri: item.imageUrl }}
               style={styles.image}
             />
-            <View style={styles.rowContainer}>
-              <Text style={globalStyles.text}>{item.title}</Text>
-                <TouchableOpacity onPress={() => handleSaveRecipe(item.imageUrl)} style={styles.saveButton}>
-                  <Text style={styles.saveButtonText}>Save</Text>
-                </TouchableOpacity>
-            </View>
+            <Text style={globalStyles.text}>{item.title}</Text>
           </View>
         ))}
       </ScrollView>
@@ -110,6 +99,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
     marginRight: 'auto',
+    position: 'relative',
+    left: 0,
   },
   image: {
     width: '90%',
@@ -118,64 +109,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     borderRadius: 10,
   },
-  saveButton: {
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 5,
-    left: 0,
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '90%',
-  },
-    container: {
-      flex: 1,
-    },
-    scrollViewContent: {
-      flexGrow: 1,
-      paddingBottom: 150,
-      backgroundColor: '#22252A',
-    },
-    rowContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 10,
-      marginBottom: 10,
-    },
-    titleText: {
-      textAlign: 'center', // Center the title text
-      flex: 1, // Allow the title to take up remaining space
-    },
-    saveButton: {
-      backgroundColor: '#4CAF50',
-      padding: 10,
-      borderRadius: 5,
-    },
-    saveButtonText: {
-      color: '#fff',
-      fontWeight: 'bold',
-    },
-    imageContainer: {
-      alignItems: 'center',
-    },
-    image: {
-      width: '90%',
-      aspectRatio: 1 / 1,
-      resizeMode: 'cover',
-      marginVertical: 10,
-      borderRadius: 10,
-    },
-    authorContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 10,
-    },
-  });
+});
+
 export default HomeScreen;

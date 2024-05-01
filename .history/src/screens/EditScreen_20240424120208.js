@@ -18,15 +18,21 @@ export default function EditScreen() {
     const route = useRoute();
     const [userId, setUserId] = useState(null); // State to hold userId
     const { imageUri, text,  Titletext } = route.params;
-
+    useEffect(() => {
+        setImage(imageUri);
+        seth1Title(text);
+    }, [imageUri, text]);
     useEffect(() => {
         // Check if user is logged in
         async function checkUserLoggedIn() {
           const user = auth.currentUser;
           if (user) {
             setUserId(user.uid); // Set userId if user is logged in
-            setImage(imageUri);
-            seth1Title(text);
+            console.log('Usser is logged in. ' + user.uid);
+            const currentUser = auth.currentUser;
+            const userEmail = currentUser.email;
+            const formattedEmail = userEmail.replace('Email', '');
+            setUserDataEmail(formattedEmail); //Saves email value if i want to change email address. 
           } else {
             // Handle case when user is not logged in
             navigation.replace("Login");

@@ -31,7 +31,7 @@ export default function EditScreen() {
             // Handle case when user is not logged in
             navigation.replace("Login");
           }
-        };
+        };an
         checkUserLoggedIn();
       }, []);
 

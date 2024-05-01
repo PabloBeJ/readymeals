@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { db, storage } from '../../firebaseConfig';
-import { query, doc, getDoc, collection, getDocs, orderBy} from 'firebase/firestore'; // Import orderBy
-import { ref, getDownloadURL} from 'firebase/storage'; // Import orderBy
+import { db } from '../../firebaseConfig';
+import { query, doc, getDoc, collection, getDocs, orderBy } from 'firebase/firestore'; // Import orderBy
 import globalStyles from '../styles/globalStyles';
 import Footer from '../components/Footer';
 
@@ -27,34 +26,19 @@ const HomeScreen = () => {
           const imageInfo = docSnapshot.data();
           const userRef = doc(db, 'users', imageInfo.userId);
           const userSnap = await getDoc(userRef);
+
           if (userSnap.exists()) {
             const userData = userSnap.data();
-            //Gets the users username and profile pcitre
             if (userData && userData.username && userData.profilePicture) {
-              // If the user exist but does not have any profile picture a defualt image will be set. 
-              if (userData.profilePicture == "default.png" || !userData.profilePicture) {
-                console.log(`Profile picture does not exist for user: ${userData.username}`);
-                // If profile picture doesn't exist or is empty, fetch default image from storage
-                const fileRef = ref(storage, `images/default/cooking-947738_960_720.jpg`);
-                const downloadURL = await getDownloadURL(fileRef);
-                //Fill content of array.  mixing bot firestore values.
-                data.push({
-                  imageUrl: imageInfo.imageUrl,
-                  title: imageInfo.imageTitle,
-                  userId: imageInfo.userId,
-                  username: userData.username,
-                  profilePictureURL: downloadURL
-                });
-              } else {
-                // If  not mixes both firestore values. 
-                data.push({
-                  imageUrl: imageInfo.imageUrl,
-                  title: imageInfo.imageTitle,
-                  userId: imageInfo.userId,
-                  username: userData.username,
-                  profilePictureURL: userData.profilePicture
-                });
-              }
+              // Construct recipe object
+              const recipe = {
+                imageUrl: imageInfo.imageUrl,
+                title: imageInfo.imageTitle,
+                userId: imageInfo.userId,
+                username: userData.username,
+                profilePictureURL: userData.profilePicture
+              };
+              data.push(recipe);
             }
           }
         }

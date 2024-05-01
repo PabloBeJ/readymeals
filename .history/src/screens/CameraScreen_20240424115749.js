@@ -39,4 +39,11 @@ export default function CameraScreen() {
       console.log('Image picking was cancelled');
     }
   };
+
+  return (
+    <View style={globalStyles.container}>
+      {/* You can render a loading indicator or any UI while waiting for the camera to open */}
+      {/* This is optional and depends on your UI design */}
+    </View>
+  );
 }
